@@ -1,0 +1,33 @@
+{
+  "name": "camunda-worker-node",
+  "version": "0.0.0",
+  "description": "Implement workers for Camunda BPM in NodeJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha -r ./test/expect.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nikku/camunda-worker-node"
+  },
+  "keywords": [
+    "camunda",
+    "worker",
+    "task"
+  ],
+  "author": "Nico Rehwaldt <git_nikku@nixis.de>",
+  "license": "MIT",
+  "dependencies": {
+    "chai": "^3.2.0",
+    "foreach": "^2.0.5",
+    "inherits": "^2.0.1",
+    "request": "^2.61.0",
+    "uuid": "^2.0.1"
+  },
+  "devDependencies": {
+    "chai": "^3.2.0",
+    "mocha": "^2.2.5",
+    "uuid": "^2.0.1",
+    "xtend": "^4.0.0"
+  }
+}
