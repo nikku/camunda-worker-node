@@ -4,6 +4,7 @@
   "description": "Implement workers for Camunda BPM in NodeJS",
   "main": "index.js",
   "scripts": {
+    "release": "npm version -m \"chore(project): release v%s\"",
     "test": "mocha -r ./test/expect.js"
   },
   "repository": {
