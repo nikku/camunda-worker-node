@@ -1,7 +1,8 @@
 # camunda-worker-node
 
-Implement workers for external tasks in [Camunda BPM](http://camunda.org) in NodeJS.
+Implement workers for external tasks in [Camunda BPM](http://camunda.org) in [NodeJS](https://nodejs.org/).
 
+> Alternative Versions: [Java](https://github.com/meyerdan/camunda-worker-java)
 
 
 ## Summary
@@ -37,7 +38,10 @@ workers.provide('work:B', function(context, callback) {
 Make sure you defined the external tasks in the process diagram before:
 
 ```xml
-<bpmn:serviceTask id="Task_A" camunda:type="external" camunda:topicName="work:A" />
+<bpmn:serviceTask
+        id="Task_A"
+        camunda:type="external"
+        camunda:topicName="work:A" />
 ```
 
 
