@@ -15,7 +15,7 @@ var engineEndpoint = 'http://localhost:8080/engine-rest';
 var workers = Workers(engineEndpoint);
 
 // a worker may access request, access and modify process variables
-workers.provide('work:A', [ 'numberVar' ], function(context, callback) {
+workers.registerWorker('work:A', [ 'numberVar' ], function(context, callback) {
 
   var newNumber = context.variables.numberVar + 1;
 
@@ -28,11 +28,15 @@ workers.provide('work:A', [ 'numberVar' ], function(context, callback) {
 });
 
 // a worker can handle errors, too
-workers.provide('work:B', function(context, callback) {
+workers.registerWorker('work:B', function(context, callback) {
 
   // report an error, if things go awry
   callback(new Error('no work done'));
 });
+
+
+// shutdown the workers instance with the application
+workers.shutdown();
 ```
 
 Make sure you defined the external tasks in the process diagram before:
@@ -42,6 +46,21 @@ Make sure you defined the external tasks in the process diagram before:
         id="Task_A"
         camunda:type="external"
         camunda:topicName="work:A" />
+```
+
+
+## Install the Worker
+
+```
+npm i --save camunda-worker-node
+```
+
+
+## Develop
+
+```
+npm install
+npm test
 ```
 
 
