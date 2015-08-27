@@ -39,7 +39,7 @@ function Api(baseUrl, options) {
   };
 
   this.undeploy = function(deployment, callback) {
-    _req('delete', '/deployment/' + deployment.id, function(err, response, body) {
+    _req('delete', '/deployment/' + deployment.id + '?cascade=true', function(err, response, body) {
 
       if (err) {
         return callback(err);
@@ -72,9 +72,9 @@ function Api(baseUrl, options) {
     });
   };
 
-  this.getProcessInstance = function(id, callback) {
+  this.getProcessInstance = function(processInstanceId, callback) {
 
-    _req('get', '/process-instance/' + id, { json: true }, function(err, response, body) {
+    _req('get', '/process-instance/' + processInstanceId, { json: true }, function(err, response, body) {
 
       if (err) {
         return callback(err);
@@ -88,6 +88,23 @@ function Api(baseUrl, options) {
     });
 
   };
+
+  this.getProcessVariable = function(processInstanceId, name, callback) {
+
+    _req('get', '/process-instance/' + processInstanceId + '/variables/' + name + '?deserializeValue=false', { json: true }, function(err, response, body) {
+
+      if (err) {
+        return callback(err);
+      }
+
+      if (response.statusCode === 404) {
+        return callback();
+      }
+
+      return callback(null, body);
+    });
+  };
+
 }
 
 inherits(Api, BaseApi);
