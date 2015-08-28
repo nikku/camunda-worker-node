@@ -15,11 +15,17 @@ workers.registerWorker('orderProcess:shipment', [ 'order' ], function(context, c
 
   var order = context.variables.order;
 
+  if (Math.random() > 0.8) {
+    console.log('[workers] [shipment] failed to process order via shipment #%s', order.orderId);
+
+    return callback(new Error('failed to process shipment: RANDOM STUFF'));
+  }
+
   // do actual work here, write database, provision goods
   order.shipmentId = uuid.v4();
   order.shipped = true;
 
-  console.log('[workers] [shipment] shipping order #%s via shipment #', order.orderId, order.shipmentId);
+  console.log('[workers] [shipment] shipping order #%s via shipment #%s', order.orderId, order.shipmentId);
 
   // notify we are done with an updated order variable
   callback(null, {
