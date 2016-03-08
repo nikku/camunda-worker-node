@@ -78,7 +78,7 @@ describe('workers', function() {
       var workerDefinition = workers.registerWorker('worker:Stuff', { lockTime: 3000 }, emptyCallback);
 
       // then
-      expect(workerDefinition.variableNames).to.eql([]);
+      expect(workerDefinition.variables).to.eql([]);
       expect(workerDefinition.remove).to.exist;
 
       expect(function() {
@@ -88,7 +88,7 @@ describe('workers', function() {
     });
 
 
-    it('should define worker with variableNames', function() {
+    it('should define worker with variables', function() {
 
       // given
       workers = Workers(engineUrl);
@@ -97,7 +97,7 @@ describe('workers', function() {
       var workerDefinition = workers.registerWorker('worker:Stuff', [ 'a', 'b' ], emptyCallback);
 
       // then
-      expect(workerDefinition.variableNames).to.eql([ 'a', 'b' ]);
+      expect(workerDefinition.variables).to.eql([ 'a', 'b' ]);
 
       // default lock time is applied
       expect(workerDefinition.lockTime).to.eql(10000);
@@ -184,6 +184,7 @@ describe('workers', function() {
 
 
       workers.registerWorker('work:B', [ 'stringVar', 'nestedObjectVar' ], function(context, callback) {
+        console.log(context)
         expect(context.variables.stringVar).to.eql('BAR');
         expect(context.variables.nestedObjectVar).to.eql(nestedObjectVar);
 
