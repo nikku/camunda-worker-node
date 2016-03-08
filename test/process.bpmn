@@ -4,12 +4,12 @@
     <bpmn:startEvent id="Start" name="Start">
       <bpmn:outgoing>SequenceFlow_03rekn4</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:serviceTask id="Task_A" name="Task A" camunda:type="external" camunda:topicName="work:A">
+    <bpmn:serviceTask id="Task_A" name="Task A" camunda:type="external" camunda:topic="work:A">
       <bpmn:incoming>SequenceFlow_03rekn4</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0lt5rfa</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:sequenceFlow id="SequenceFlow_03rekn4" sourceRef="Start" targetRef="Task_A" />
-    <bpmn:serviceTask id="Task_B" name="Task B" camunda:type="external" camunda:topicName="work:B">
+    <bpmn:serviceTask id="Task_B" name="Task B" camunda:type="external" camunda:topic="work:B">
       <bpmn:incoming>SequenceFlow_0lt5rfa</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_011sf4t</bpmn:outgoing>
     </bpmn:serviceTask>
