@@ -56,7 +56,9 @@ describe('workers', function() {
 
   afterEach(function(done) {
     if (workers) {
-      workers.shutdown();
+      workers.shutdown(() => {
+        Object.keys(workers.workers).forEach(topic => workers.workers[topic].remove())
+      });
     }
 
     if (deployment) {
@@ -168,19 +170,17 @@ describe('workers', function() {
       workers = Workers(engineUrl);
 
       workers.registerWorker('work:A', [ 'numberVar', 'objectVar', 'dateVar', 'nonExistingVar' ], function(context, callback) {
-
         expect(context.id).to.exist;
         expect(context.topicName).to.exist;
-        expect(context.lockTime).to.exist;
+        expect(context.lockExpirationTime).to.exist;
         expect(context.activityId).to.exist;
         expect(context.activityInstanceId).to.exist;
         expect(context.processInstanceId).to.exist;
 
-        expect(context.variables.nonExistingVar).to.be.null;
         expect(context.variables.numberVar).to.eql(1);
-
-        expect(context.variables.dateVar).to.eql(dateVar);
         expect(context.variables.objectVar).to.eql({ name: 'Walter' });
+        expect(context.variables.dateVar).to.eql(dateVar);
+        expect(context.variables.nonExistingVar).to.be.undefined;
 
         callback(null, {
           variables: {
@@ -194,7 +194,6 @@ describe('workers', function() {
 
 
       workers.registerWorker('work:B', [ 'stringVar', 'nestedObjectVar' ], function(context, callback) {
-        console.log(context)
         expect(context.variables.stringVar).to.eql('BAR');
         expect(context.variables.nestedObjectVar).to.eql(nestedObjectVar);
 
