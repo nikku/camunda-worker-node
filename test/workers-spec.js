@@ -56,7 +56,9 @@ describe('workers', function() {
 
   afterEach(function(done) {
     if (workers) {
-      workers.shutdown();
+      workers.shutdown(() => {
+        Object.keys(workers.workers).forEach(topic => workers.workers[topic].remove())
+      });
     }
 
     if (deployment) {
@@ -78,7 +80,7 @@ describe('workers', function() {
       var workerDefinition = workers.registerWorker('worker:Stuff', { lockTime: 3000 }, emptyCallback);
 
       // then
-      expect(workerDefinition.variableNames).to.eql([]);
+      expect(workerDefinition.variables).to.eql([]);
       expect(workerDefinition.remove).to.exist;
 
       expect(function() {
@@ -88,7 +90,7 @@ describe('workers', function() {
     });
 
 
-    it('should define worker with variableNames', function() {
+    it('should define worker with variables', function() {
 
       // given
       workers = Workers(engineUrl);
@@ -97,7 +99,7 @@ describe('workers', function() {
       var workerDefinition = workers.registerWorker('worker:Stuff', [ 'a', 'b' ], emptyCallback);
 
       // then
-      expect(workerDefinition.variableNames).to.eql([ 'a', 'b' ]);
+      expect(workerDefinition.variables).to.eql([ 'a', 'b' ]);
 
       // default lock time is applied
       expect(workerDefinition.lockTime).to.eql(10000);
@@ -115,6 +117,7 @@ describe('workers', function() {
       var idx = 0;
 
       workers = Workers(engineUrl);
+      workers.enableLogging()
 
       workers.registerWorker('work:A', function(context, callback) {
         trace.push('work:A');
@@ -156,21 +159,20 @@ describe('workers', function() {
       };
 
       workers = Workers(engineUrl);
+      workers.enableLogging()
 
       workers.registerWorker('work:A', [ 'numberVar', 'objectVar', 'dateVar', 'nonExistingVar' ], function(context, callback) {
-
         expect(context.id).to.exist;
         expect(context.topicName).to.exist;
-        expect(context.lockTime).to.exist;
+        expect(context.lockExpirationTime).to.exist;
         expect(context.activityId).to.exist;
         expect(context.activityInstanceId).to.exist;
         expect(context.processInstanceId).to.exist;
 
-        expect(context.variables.nonExistingVar).to.be.null;
         expect(context.variables.numberVar).to.eql(1);
-
-        expect(context.variables.dateVar).to.eql(dateVar);
         expect(context.variables.objectVar).to.eql({ name: 'Walter' });
+        expect(context.variables.dateVar).to.eql(dateVar);
+        expect(context.variables.nonExistingVar).to.be.undefined;
 
         callback(null, {
           variables: {
