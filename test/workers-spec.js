@@ -3,6 +3,7 @@ var fs = require('fs');
 var extend = require('xtend');
 
 var Workers = require('../');
+var Logger = require('../lib/logger');
 
 var EngineApi = require('./engine/api');
 
@@ -56,8 +57,13 @@ describe('workers', function() {
 
   afterEach(function(done) {
     if (workers) {
-      workers.shutdown(() => {
-        Object.keys(workers.workers).forEach(topic => workers.workers[topic].remove())
+
+      workers.shutdown(function() {
+        var registeredWorkers = workers.workers;
+
+        Object.keys(registeredWorkers).forEach(function(topic) {
+          registeredWorkers[topic].remove();
+        });
       });
     }
 
@@ -180,7 +186,10 @@ describe('workers', function() {
 
       var idx = 0;
 
-      workers = Workers(engineUrl);
+      workers = Workers(engineUrl, {
+        workerId: 'test-worker',
+        use: [ Logger ]
+      });
 
       workers.registerWorker('work:A', function(context, callback) {
         trace.push('work:A');
@@ -221,7 +230,10 @@ describe('workers', function() {
         objectVar: { name: 'Walter' }
       };
 
-      workers = Workers(engineUrl);
+      workers = Workers(engineUrl, {
+        workerId: 'test-worker',
+        use: [ Logger ]
+      });
 
       workers.registerWorker('work:A', [ 'numberVar', 'objectVar', 'dateVar', 'nonExistingVar' ], function(context, callback) {
         expect(context.id).to.exist;
@@ -248,6 +260,7 @@ describe('workers', function() {
 
 
       workers.registerWorker('work:B', [ 'stringVar', 'nestedObjectVar' ], function(context, callback) {
+
         expect(context.variables.stringVar).to.eql('BAR');
         expect(context.variables.nestedObjectVar).to.eql(nestedObjectVar);
 
