@@ -1,13 +1,13 @@
 # camunda-worker-node
 
-Implement workers for [Camunda BPM](http://camunda.org) external tasks in [NodeJS](https://nodejs.org/).
+Implement [external task](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/) workers for [Camunda BPM](http://camunda.org) in [NodeJS](https://nodejs.org/).
 
 Compatible with __Camunda BPM 7.5+__.
 
 
 ## Summary
 
-This library provides a NodeJS interface to external tasks exposed by the process engine.
+This library provides you with a simple API to implement external tasks for the [Camunda process engine](http://camunda.org) with NodeJS.
 
 ```javascript
 var Workers = require('camunda-worker-node');
@@ -53,7 +53,7 @@ Make sure you defined the external tasks in the process diagram before:
 ```
 
 
-## Extend workers
+## Extend Workers
 
 Workers may be extended via the `use` config parameter.
 
@@ -66,7 +66,7 @@ Workers(engineEndpoint, {
 });
 ```
 
-#### Existing extensions
+#### Existing Extensions
 
 * [`Logger`](./lib/logger.js) - adds verbose logging of what is going on
 * [`Backoff`](./lib/backoff.js) - increase polling intervals if the engine endpoint is temporarily unavailable
