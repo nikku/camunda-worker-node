@@ -103,6 +103,16 @@ describe('workers', function() {
       expect(workerDefinition.lockTime).to.eql(10000);
     });
 
+
+    it('should configure Workers with workerId', function() {
+
+      // given
+      workers = Workers(engineUrl, { workerId: 'FOO' });
+
+      // then
+      expect(workers.options.workerId).to.eql('FOO');
+    });
+
   });
 
 
