@@ -10,6 +10,8 @@ Compatible with __Camunda BPM 7.5+__.
 This library provides a NodeJS interface to external tasks exposed by the process engine.
 
 ```javascript
+var Workers = require('camunda-worker-node');
+
 var engineEndpoint = 'http://localhost:8080/engine-rest';
 
 var workers = Workers(engineEndpoint, {
