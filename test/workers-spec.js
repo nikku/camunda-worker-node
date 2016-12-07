@@ -115,6 +115,60 @@ describe('workers', function() {
       expect(workers.options.workerId).to.eql('FOO');
     });
 
+
+    describe('should extend via [use]', function() {
+
+      it('without options', function() {
+
+        // given
+        var called;
+
+        function Extension(workers, opts) {
+          called = [ workers, opts ];
+        }
+
+        // when
+        workers = Workers(engineUrl, {
+          use: [ Extension ]
+        });
+
+        // then
+        expect(called).to.eql([ workers, {} ]);
+      });
+
+
+      it('with options', function() {
+
+        // given
+        var called;
+
+        function Extension(workers, opts) {
+          called = [ workers, opts ];
+        }
+
+        // when
+        workers = Workers(engineUrl, {
+          use: [ [ Extension, { foo: 'BAR' } ] ]
+        });
+
+        // then
+        expect(called).to.eql([ workers, { foo: 'BAR' } ]);
+      });
+
+
+      it('failing on malformed', function() {
+
+        // when
+        expect(function() {
+          Workers(engineUrl, {
+            use: [ { foo: 'BAR' } ]
+          });
+        }).to.throw('extension must be <function> or <[ function, opts ]>');
+
+      });
+
+    });
+
   });
 
 
