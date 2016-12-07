@@ -112,6 +112,21 @@ describe('workers', function() {
     });
 
 
+    it('should allow single worker per topic name only', function() {
+
+      // given
+      workers = Workers(engineUrl);
+
+      // when
+      workers.registerWorker('worker:Stuff', [ 'a', 'b' ], emptyCallback);
+
+      // then
+      expect(function() {
+        workers.registerWorker('worker:Stuff', [ 'a', 'b' ], emptyCallback);
+      }).to.throw('worker for <worker:Stuff> already registered');
+    });
+
+
     it('should configure Workers with workerId', function() {
 
       // given
