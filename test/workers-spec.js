@@ -86,7 +86,7 @@ describe('workers', function() {
       var workerDefinition = workers.registerWorker('worker:Stuff', { lockTime: 3000 }, emptyCallback);
 
       // then
-      expect(workerDefinition.variables).to.eql([]);
+      expect(workerDefinition.variables).to.be.undefined;
       expect(workerDefinition.remove).to.exist;
 
       expect(function() {
