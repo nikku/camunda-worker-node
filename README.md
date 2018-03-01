@@ -2,7 +2,7 @@
 
 Implement your [external task workers](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/) for [Camunda](http://camunda.org) in [NodeJS](https://nodejs.org/).
 
-> Compatible with __Camunda 7.8+__. Use version `<= 0.5` if you need support for earlier versions of Camunda.
+> Compatible with Camunda `>= 7.8`.
 
 
 ## Usage
