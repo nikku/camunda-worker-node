@@ -1,13 +1,13 @@
 # camunda-worker-node
 
-Implement [external task](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/) workers for [Camunda BPM](http://camunda.org) in [NodeJS](https://nodejs.org/).
+Implement your [external task workers](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/) for [Camunda](http://camunda.org) in [NodeJS](https://nodejs.org/).
 
-Compatible with __Camunda BPM 7.8+__.
+> Compatible with __Camunda 7.8+__. Use version `<= 0.5` if you need support for earlier versions of Camunda.
 
 
 ## Usage
 
-This library provides you with a simple API to implement external tasks for the [Camunda process engine](http://camunda.org) with NodeJS.
+This library exposes a simple API to implement external task workers for [Camunda](http://camunda.org).
 
 ```javascript
 var Workers = require('camunda-worker-node');
@@ -57,6 +57,21 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
         id="Task_A"
         camunda:type="external"
         camunda:topicName="work:A" />
+```
+
+
+## Authentication
+
+Provide additional request headers to authenticate your task workers via the `requestOptions` configuration:
+
+```javascript
+var workers = Workers(engineEndpoint, {
+  requestOptions: {
+    headers: {
+      Authorization: 'Bearer ...'
+    }
+  }
+})
 ```
 
 
