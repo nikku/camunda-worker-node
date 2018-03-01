@@ -6,6 +6,10 @@ All notable changes to [camunda-worker-node](https://github.com/nikku/camunda-wo
 
 ___Note:__ Yet to be released changes appear here._
 
+## 0.5.0
+
+* `FEAT`: fetch all variables per default
+
 ## 0.4.0
 
 * `FIX`: correct failure callback url
