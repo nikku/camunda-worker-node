@@ -10,9 +10,9 @@ function id() {
 }
 
 
-function Api(baseUrl, options) {
+function Api(baseUrl, requestOptions, apiVersion) {
 
-  BaseApi.call(this, baseUrl);
+  BaseApi.call(this, baseUrl, requestOptions, apiVersion);
 
   var _req = this._req;
 

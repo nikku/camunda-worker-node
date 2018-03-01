@@ -2,7 +2,7 @@
 
 Implement [external task](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/) workers for [Camunda BPM](http://camunda.org) in [NodeJS](https://nodejs.org/).
 
-Compatible with __Camunda BPM 7.5+__.
+Compatible with __Camunda BPM 7.8+__.
 
 
 ## Summary
