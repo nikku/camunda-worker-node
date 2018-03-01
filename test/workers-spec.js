@@ -206,6 +206,113 @@ describe('workers', function() {
 
   describe('task execution', function() {
 
+    it('should provide context', function(done) {
+
+      // given
+      workers = Workers(engineUrl, {
+        workerId: 'test-worker',
+        use: [
+          Logger
+        ]
+      });
+
+      workers.registerWorker('work:A', function(context, callback) {
+
+        // then
+        expect(context.topicName).to.eql('work:A');
+        expect(context.workerId).to.eql('test-worker');
+
+        expect(context.id).to.exist;
+        expect(context.lockExpirationTime).to.exist;
+        expect(context.activityId).to.eql('Task_A');
+        expect(context.activityInstanceId).to.match(/Task_A/);
+        expect(context.processInstanceId).to.exist;
+        expect(context.processDefinitionKey).to.eql('TestProcess');
+
+        expect(context.variables).to.eql({});
+
+        callback(null);
+
+        delay(1, done);
+      });
+
+      // when
+      engineApi.startProcessByKey('TestProcess', {}, noop);
+    });
+
+
+    describe('variables', function() {
+
+      it('should fetch all (default)', function(done) {
+
+        // given
+        var dateVar = new Date('2010-07-06T10:30:10.000Z');
+
+        workers = Workers(engineUrl, {
+          workerId: 'test-worker',
+          use: [
+            Logger
+          ]
+        });
+
+        workers.registerWorker('work:A', function(context, callback) {
+
+          // then
+          // fetching all variables
+          expect(context.variables).to.eql({
+            numberVar: 1,
+            objectVar: { name: 'Walter' },
+            dateVar: dateVar
+          });
+
+          callback(null);
+
+          delay(1, done);
+        });
+
+        // when
+        engineApi.startProcessByKey('TestProcess', {
+          numberVar: 1,
+          objectVar: { name: 'Walter' },
+          dateVar: dateVar
+        }, noop);
+      });
+
+
+      it('should fetch specific', function(done) {
+
+        // given
+        workers = Workers(engineUrl, {
+          workerId: 'test-worker',
+          use: [
+            Logger
+          ]
+        });
+
+        workers.registerWorker('work:A', [ 'numberVar' ], function(context, callback) {
+
+          // then
+          // fetching all variables
+          expect(context.variables).to.eql({
+            numberVar: 1
+          });
+
+          callback(null);
+
+          delay(1, done);
+        });
+
+        // when
+        engineApi.startProcessByKey('TestProcess', {
+          numberVar: 1,
+          objectVar: { name: 'Walter' },
+          dateVar: new Date('2010-07-06T10:30:10.000Z')
+        }, noop);
+      });
+
+    });
+
+
     it('should handle multiple', function(done) {
 
       var trace = [];
@@ -274,19 +381,13 @@ describe('workers', function() {
         'nonExistingVar'
       ], function(context, callback) {
 
-        expect(context.id).to.exist;
-        expect(context.topicName).to.exist;
-        expect(context.lockExpirationTime).to.exist;
-        expect(context.activityId).to.exist;
-        expect(context.activityInstanceId).to.exist;
-        expect(context.processInstanceId).to.exist;
-
-        expect(context.variables.numberVar).to.eql(1);
-        expect(context.variables.objectVar).to.eql({ name: 'Walter' });
-        expect(context.variables.dateVar).to.eql(dateVar);
-        expect(context.variables.nonExistingVar).to.be.undefined;
-
         trace.push(log('work:A', context));
+
+        expect(context.variables).to.eql({
+          numberVar: 1,
+          objectVar: { name: 'Walter' },
+          dateVar: dateVar
+        });
 
         callback(null, {
           variables: {
@@ -302,10 +403,13 @@ describe('workers', function() {
         'stringVar',
         'nestedObjectVar'
       ], function(context, callback) {
-        expect(context.variables.stringVar).to.eql('BAR');
-        expect(context.variables.nestedObjectVar).to.eql(nestedObjectVar);
 
         trace.push(log('work:B', context));
+
+        expect(context.variables).to.eql({
+          stringVar: 'BAR',
+          nestedObjectVar: nestedObjectVar
+        });
 
         callback(null);
       });
