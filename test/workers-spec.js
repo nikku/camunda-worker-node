@@ -9,6 +9,8 @@ var Logger = require('../lib/logger');
 
 var EngineApi = require('./engine/api');
 
+var debug = require('debug')('workers-spec');
+
 
 function delay(seconds, fn) {
   return setTimeout(fn, seconds * 1000);
@@ -71,13 +73,13 @@ describe('workers', function() {
 
     if (deployment) {
       engineApi.undeploy(deployment, done);
+    } else {
+      done();
     }
   });
 
 
   describe('api', function() {
-
-    function emptyCallback() {}
 
     it('should define worker with options', function() {
 
@@ -85,7 +87,7 @@ describe('workers', function() {
       workers = Workers(engineUrl);
 
       // when
-      var workerDefinition = workers.registerWorker('worker:Stuff', { lockTime: 3000 }, emptyCallback);
+      var workerDefinition = workers.registerWorker('worker:Stuff', { lockTime: 3000 }, noop);
 
       // then
       expect(workerDefinition.variables).to.eql([]);
@@ -104,7 +106,7 @@ describe('workers', function() {
       workers = Workers(engineUrl);
 
       // when
-      var workerDefinition = workers.registerWorker('worker:Stuff', [ 'a', 'b' ], emptyCallback);
+      var workerDefinition = workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
 
       // then
       expect(workerDefinition.variables).to.eql([ 'a', 'b' ]);
@@ -120,11 +122,11 @@ describe('workers', function() {
       workers = Workers(engineUrl);
 
       // when
-      workers.registerWorker('worker:Stuff', [ 'a', 'b' ], emptyCallback);
+      workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
 
       // then
       expect(function() {
-        workers.registerWorker('worker:Stuff', [ 'a', 'b' ], emptyCallback);
+        workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
       }).to.throw('worker for <worker:Stuff> already registered');
     });
 
@@ -171,11 +173,16 @@ describe('workers', function() {
 
         // when
         workers = Workers(engineUrl, {
-          use: [ [ Extension, { foo: 'BAR' } ] ]
+          use: [
+            [ Extension, { foo: 'BAR' } ]
+          ]
         });
 
         // then
-        expect(called).to.eql([ workers, { foo: 'BAR' } ]);
+        expect(called).to.eql([
+          workers,
+          { foo: 'BAR' }
+        ]);
       });
 
 
@@ -184,7 +191,9 @@ describe('workers', function() {
         // when
         expect(function() {
           Workers(engineUrl, {
-            use: [ { foo: 'BAR' } ]
+            use: [
+              { foo: 'BAR' }
+            ]
           });
         }).to.throw('extension must be <function> or <[ function, opts ]>');
 
@@ -235,7 +244,13 @@ describe('workers', function() {
 
       var trace = [];
 
-      var nestedObjectVar = { id: '1111', aList: [ 'A', 'B' ] };
+      var nestedObjectVar = {
+        id: '1111',
+        aList: [
+          'A',
+          'B'
+        ]
+      };
 
       var dateVar = new Date('2010-07-06T10:30:10.000Z');
 
@@ -247,10 +262,18 @@ describe('workers', function() {
 
       workers = Workers(engineUrl, {
         workerId: 'test-worker',
-        use: [ Logger ]
+        use: [
+          Logger
+        ]
       });
 
-      workers.registerWorker('work:A', [ 'numberVar', 'objectVar', 'dateVar', 'nonExistingVar' ], function(context, callback) {
+      workers.registerWorker('work:A', [
+        'numberVar',
+        'objectVar',
+        'dateVar',
+        'nonExistingVar'
+      ], function(context, callback) {
+
         expect(context.id).to.exist;
         expect(context.topicName).to.exist;
         expect(context.lockExpirationTime).to.exist;
@@ -263,6 +286,8 @@ describe('workers', function() {
         expect(context.variables.dateVar).to.eql(dateVar);
         expect(context.variables.nonExistingVar).to.be.undefined;
 
+        trace.push(log('work:A', context));
+
         callback(null, {
           variables: {
             stringVar: 'BAR',
@@ -270,12 +295,13 @@ describe('workers', function() {
           }
         });
 
-        trace.push(log('work:A', context));
       });
 
 
-      workers.registerWorker('work:B', [ 'stringVar', 'nestedObjectVar' ], function(context, callback) {
-
+      workers.registerWorker('work:B', [
+        'stringVar',
+        'nestedObjectVar'
+      ], function(context, callback) {
         expect(context.variables.stringVar).to.eql('BAR');
         expect(context.variables.nestedObjectVar).to.eql(nestedObjectVar);
 
@@ -291,7 +317,7 @@ describe('workers', function() {
           return done(err);
         }
 
-        delay(4, function() {
+        delay(5, function() {
 
           expect(trace).to.eql([
             {
@@ -388,7 +414,12 @@ describe('workers', function() {
 
             engineApi.getProcessVariable(processInstance.id, 'existingUser', function(err, variable) {
 
-              var rawExistingUser = extend({}, newUser, { value: JSON.stringify({ name: 'Hugo', age: 31 }) });
+              var rawExistingUser = extend({}, newUser, {
+                value: JSON.stringify({
+                  name: 'Hugo',
+                  age: 31
+                })
+              });
 
               // expect modified existing user
               expect(variable).to.eql(rawExistingUser);
@@ -407,3 +438,13 @@ describe('workers', function() {
   });
 
 });
+
+
+// helpers ////////////////////
+
+function noop(err) {
+
+  if (err) {
+    debug('callback error', err);
+  }
+}
