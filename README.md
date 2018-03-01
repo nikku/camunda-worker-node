@@ -75,6 +75,17 @@ var workers = Workers(engineEndpoint, {
 ```
 
 
+## Logging
+
+We employ [debug](https://www.npmjs.com/package/debug) for logging.
+
+Use the [`Logger` extension](./lib/logger.js) in combination with `DEBUG=*` to capture a full trace of what's going on under the hood:
+
+```
+DEBUG=* node start-workers.js
+```
+
+
 ## Extend Workers
 
 Workers may be extended via the `use` config parameter.
@@ -118,12 +129,19 @@ npm i --save camunda-worker-node
 
 ## Develop
 
+Install dependencies:
+
 ```
 npm install
-npm test
 ```
 
-__Hint:__ You need a Camunda BPM REST API exposed on `localhost:8080/engine-rest` for the tests to pass. An easy way to get it up running is [via Docker](https://github.com/camunda/docker-camunda-bpm-platform#get-started).
+Lint and run all tests:
+
+```
+DEBUG=worker* npm run all
+```
+
+__Note:__ You need a Camunda BPM REST API exposed on `localhost:8080/engine-rest` for the tests to pass. An easy way to get it up running is [via Docker](https://github.com/camunda/docker-camunda-bpm-platform#get-started).
 
 
 ## License
