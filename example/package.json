@@ -7,6 +7,7 @@
   "license": "MIT",
   "dependencies": {
     "camunda-worker-node": "file:..",
+    "debug": "^3.1.0",
     "uuid": "^2.0.1"
   }
 }

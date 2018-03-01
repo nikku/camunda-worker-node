@@ -7,16 +7,23 @@ var engineEndpoint = process.env.ENGINE_URL || 'http://localhost:8080/engine-res
 var uuid = require('uuid');
 
 
-var workers = new Workers(engineEndpoint);
+var debugWorkers = require('debug')('workers');
 
-Backoff(workers);
+var debugShipment = require('debug')('worker:shipment');
+
+var workers = new Workers(engineEndpoint, {
+  use: [
+    Backoff
+  ]
+});
+
 
 workers.registerWorker('orderProcess:shipment', [ 'order' ], function(context, callback) {
 
   var order = context.variables.order;
 
   if (Math.random() > 0.8) {
-    console.log('[workers] [shipment] failed to process order via shipment #%s', order.orderId);
+    debugShipment('failed to ship order[id=%s]', order.orderId);
 
     return callback(new Error('failed to process shipment: RANDOM STUFF'));
   }
@@ -25,7 +32,7 @@ workers.registerWorker('orderProcess:shipment', [ 'order' ], function(context, c
   order.shipmentId = uuid.v4();
   order.shipped = true;
 
-  console.log('[workers] [shipment] shipping order #%s via shipment #%s', order.orderId, order.shipmentId);
+  debugShipment('shipping order[id=%s] with shipmentId=%s', order.orderId, order.shipmentId);
 
   // notify we are done with an updated order variable
   callback(null, {
@@ -38,14 +45,14 @@ workers.registerWorker('orderProcess:shipment', [ 'order' ], function(context, c
 
 
 workers.on('start', function() {
-  console.log('[workers] starting');
+  debugWorkers('starting');
 });
 
 workers.on('poll', function() {
-  console.log('[workers] polling');
+  debugWorkers('polling');
 });
 
 // handle worker errors
 workers.on('error', function(err) {
-  console.error('[workers] error: %s', err);
+  debugWorkers('error: %s', err);
 });
