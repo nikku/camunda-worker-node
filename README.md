@@ -38,6 +38,13 @@ workers.registerWorker('work:B', function(context, callback) {
   callback(new Error('no work done'));
 });
 
+workers.registerWorker('work:C', function(context, callback) {
+
+  // complete with a BPMN error
+  callback(null, {
+    errorCode: 'some-bpmn-error'
+  });
+});
 
 // shutdown the workers instance with the application
 workers.shutdown();

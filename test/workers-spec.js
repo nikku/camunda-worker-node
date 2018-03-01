@@ -458,6 +458,86 @@ describe('workers', function() {
       });
     });
 
+
+    describe('error', function() {
+
+      it('should complete with error', function(done) {
+
+        // given
+        workers = Workers(engineUrl, {
+          workerId: 'test-worker',
+          use: [
+            Logger
+          ]
+        });
+
+        var workerId = workers.options.workerId;
+
+        workers.registerWorker('work:A', function(context, callback) {
+
+          // when
+          callback(new Error('could not execute'));
+        });
+
+        engineApi.startProcessByKey('TestProcess', {}, function(err) {
+
+          delay(3, function() {
+
+            engineApi.getWorkerLog(workerId, function(err, log) {
+
+              // then
+              expect(log).to.have.length(1);
+
+              expect(log[0].errorMessage).to.eql('could not execute');
+
+              done();
+            });
+          });
+
+        });
+
+      });
+
+
+      it('should complete with BPMN error', function(done) {
+
+        // given
+        workers = Workers(engineUrl, {
+          workerId: 'test-worker',
+          use: [
+            Logger
+          ]
+        });
+
+        workers.registerWorker('work:A', function(context, callback) {
+
+          // when
+          callback(null, {
+            errorCode: 'some-error'
+          });
+        });
+
+        engineApi.startProcessByKey('TestProcess', {}, function(err, processInstance) {
+
+          delay(3, function() {
+
+            engineApi.getActivityInstances(processInstance.id, function(err, activityInstances) {
+
+              // then
+              var nestedInstances = activityInstances.childActivityInstances;
+
+              expect(nestedInstances).to.have.length(1);
+              expect(nestedInstances[0].activityId).to.eql('Task_C');
+
+              done();
+            });
+          });
+
+        });
+
+      });
+    });
+
   });
 
 

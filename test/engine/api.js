@@ -105,6 +105,28 @@ function Api(baseUrl, requestOptions, apiVersion) {
     });
   };
 
+  this.getWorkerLog = function(workerId, callback) {
+
+    _req('get', '/history/external-task-log?workerId=' + workerId, { json: true }, function(err, response, body) {
+      if (err) {
+        return callback(err);
+      }
+
+      return callback(null, body);
+    });
+  };
+
+  this.getActivityInstances = function(processInstanceId, callback) {
+
+    _req('get', '/process-instance/' + processInstanceId + '/activity-instances', { json: true }, function(err, response, body) {
+      if (err) {
+        return callback(err);
+      }
+
+      return callback(null, body);
+    });
+  };
+
 }
 
 inherits(Api, BaseApi);
