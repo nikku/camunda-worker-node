@@ -5,7 +5,7 @@ Implement [external task](https://docs.camunda.org/manual/latest/user-guide/proc
 Compatible with __Camunda BPM 7.8+__.
 
 
-## Summary
+## Usage
 
 This library provides you with a simple API to implement external tasks for the [Camunda process engine](http://camunda.org) with NodeJS.
 
@@ -43,7 +43,7 @@ workers.registerWorker('work:B', function(context, callback) {
 workers.shutdown();
 ```
 
-Make sure you defined the external tasks in the process diagram before:
+Make sure you properly configured the [external tasks](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/) in your BPMN 2.0 diagram:
 
 ```xml
 <bpmn:serviceTask
