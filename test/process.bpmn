@@ -20,7 +20,7 @@
     <bpmn:sequenceFlow id="SequenceFlow_011sf4t" sourceRef="Task_B" targetRef="End" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="TestProcess">
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="Start">
         <dc:Bounds x="186" y="102" width="36" height="36" />
         <bpmndi:BPMNLabel>
