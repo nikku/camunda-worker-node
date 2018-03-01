@@ -6,6 +6,11 @@ All notable changes to [camunda-worker-node](https://github.com/nikku/camunda-wo
 
 ___Note:__ Yet to be released changes appear here._
 
+## 0.6.0
+
+* `FEAT`: change date serialization to match Camunda 7.8+ format ([`ecbc53e9`](https://github.com/nikku/camunda-worker-node/commit/ecbc53e94e689c1ca75a6bfc3ee280bd90b6e28a))
+* `CHORE`: add `LICENSE` file
+
 ## 0.5.0
 
 * `FEAT`: fetch all variables per default
