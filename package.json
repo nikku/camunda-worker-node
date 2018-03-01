@@ -1,6 +1,6 @@
 {
   "name": "camunda-worker-node",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Implement workers for Camunda BPM in NodeJS",
   "main": "index.js",
   "scripts": {
