@@ -199,8 +199,6 @@ describe('workers', function() {
 
       var trace = [];
 
-      var idx = 0;
-
       workers = Workers(engineUrl, {
         workerId: 'test-worker',
         use: [ Logger ]

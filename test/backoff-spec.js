@@ -1,7 +1,5 @@
 var fs = require('fs');
 
-var extend = require('xtend');
-
 var Workers = require('../');
 
 var Logger = require('../lib/logger');
@@ -12,18 +10,6 @@ var EngineApi = require('./engine/api');
 
 function delay(seconds, fn) {
   return setTimeout(fn, seconds * 1000);
-}
-
-function log(worker, context) {
-
-  return {
-    worker: worker,
-    context: {
-      topicName: context.topicName,
-      activityId: context.activityId,
-      processInstanceId: context.processInstanceId
-    }
-  };
 }
 
 
@@ -80,8 +66,6 @@ describe('backoff', function() {
     it('should work with backoff', function(done) {
 
       var trace = [];
-
-      var idx = 0;
 
       workers = Workers(engineUrl, {
         workerId: 'test-worker',
