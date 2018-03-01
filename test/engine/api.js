@@ -76,12 +76,12 @@ function Api(baseUrl, options) {
 
     _req('get', '/process-instance/' + processInstanceId, { json: true }, function(err, response, body) {
 
-      if (err) {
-        return callback(err);
+      if (response && response.statusCode === 404) {
+        return callback();
       }
 
-      if (response.statusCode === 404) {
-        return callback();
+      if (err) {
+        return callback(err);
       }
 
       return callback(null, body);
@@ -93,12 +93,12 @@ function Api(baseUrl, options) {
 
     _req('get', '/process-instance/' + processInstanceId + '/variables/' + name + '?deserializeValue=false', { json: true }, function(err, response, body) {
 
-      if (err) {
-        return callback(err);
+      if (response && response.statusCode === 404) {
+        return callback();
       }
 
-      if (response.statusCode === 404) {
-        return callback();
+      if (err) {
+        return callback(err);
       }
 
       return callback(null, body);
