@@ -1,5 +1,7 @@
 var fs = require('fs');
 
+var expect = require('chai').expect;
+
 var extend = require('xtend');
 
 var Workers = require('../');

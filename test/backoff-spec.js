@@ -1,5 +1,7 @@
 var fs = require('fs');
 
+var expect = require('chai').expect;
+
 var Workers = require('../');
 
 var Logger = require('../lib/logger');
