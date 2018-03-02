@@ -18,32 +18,20 @@ var workers = Workers(engineEndpoint, {
   workerId: 'some-worker-id'
 });
 
-// a worker may access request, access and modify process variables
+// a worker may access and modify process variables
 workers.registerWorker('work:A', [ 'numberVar' ], function(context, callback) {
 
   var newNumber = context.variables.numberVar + 1;
 
-  // node style callback (err, result)
+  // complete with update variables
   callback(null, {
     variables: {
       numberVar: newNumber
     }
   });
-});
 
-// a worker can handle errors, too
-workers.registerWorker('work:B', function(context, callback) {
-
-  // report an error, if things go awry
+  // fail with an error if things go awry
   callback(new Error('no work done'));
-});
-
-workers.registerWorker('work:C', function(context, callback) {
-
-  // complete with a BPMN error
-  callback(null, {
-    errorCode: 'some-bpmn-error'
-  });
 });
 
 // shutdown the workers instance with the application
@@ -57,6 +45,39 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
         id="Task_A"
         camunda:type="external"
         camunda:topicName="work:A" />
+```
+
+
+## Features
+
+* Implement workers with node-style callbacks or [`async` functions](#workers-as-async-functions)
+* Complete tasks with updated variables or fail with errors
+* Trigger [BPMN errors](#trigger-bpmn-error)
+* [Extend via plugins](#extend-workers)
+* Configure [logging](#logging) or [authentication](#authentication)
+
+
+## Workers as async Functions
+
+ES6 style async/await to implement workers is fully supported:
+
+```javascript
+// a worker can be an async function
+workers.registerWorker('work:B', async function(context) {
+
+  // await async increment
+  var newNumber = await increment(context.variables.numberVar);
+
+  // indicate an error
+  throw new Error('no work done');
+
+  // or return actual result
+  return {
+    variables: {
+      numberVar: newNumber
+    }
+  };
+});
 ```
 
 
@@ -83,6 +104,20 @@ Use the [`Logger` extension](./lib/logger.js) in combination with `DEBUG=*` to c
 
 ```
 DEBUG=* node start-workers.js
+```
+
+
+## Trigger BPMN Errors
+
+You may indicate BPMN errors to trigger business defined exception handling:
+
+```javascript
+workers.registerWorker('work:B', function(context, callback) {
+  // trigger business aka BPMN errors
+  callback(null, {
+    errorCode: 'some-bpmn-error'
+  });
+});
 ```
 
 
