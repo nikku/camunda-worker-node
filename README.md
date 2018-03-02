@@ -42,9 +42,9 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 
 ```xml
 <bpmn:serviceTask
-        id="Task_A"
-        camunda:type="external"
-        camunda:topicName="work:A" />
+  id="Task_A"
+  camunda:type="external"
+  camunda:topicName="work:A" />
 ```
 
 
