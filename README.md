@@ -52,7 +52,7 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 
 * Implement workers with node-style callbacks or [`async` functions](#workers-as-async-functions)
 * Complete tasks with updated variables or fail with errors
-* Trigger [BPMN errors](#trigger-bpmn-error)
+* Trigger [BPMN errors](#trigger-bpmn-errors)
 * [Extend via plugins](#extend-workers)
 * Configure [logging](#logging) or [authentication](#authentication)
 
