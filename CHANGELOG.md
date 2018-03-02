@@ -6,6 +6,10 @@ All notable changes to [camunda-worker-node](https://github.com/nikku/camunda-wo
 
 ___Note:__ Yet to be released changes appear here._
 
+## 1.1.0
+
+* `FEAT`: add ability to extend task locks ([`56e42e6a`](https://github.com/nikku/camunda-worker-node/commit/56e42e6ac6bc5db6178866f7d39e0f09cf4edb7a))
+
 ## 1.0.1
 
 * `DOCS`: improve example
