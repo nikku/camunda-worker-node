@@ -374,6 +374,7 @@ describe('workers', function() {
         ]
       });
 
+      // callback style worker
       workers.registerWorker('work:A', [
         'numberVar',
         'objectVar',
@@ -399,10 +400,11 @@ describe('workers', function() {
       });
 
 
+      // promise based worker
       workers.registerWorker('work:B', [
         'stringVar',
         'nestedObjectVar'
-      ], function(context, callback) {
+      ], function(context) {
 
         trace.push(log('work:B', context));
 
@@ -411,7 +413,9 @@ describe('workers', function() {
           nestedObjectVar: nestedObjectVar
         });
 
-        callback(null);
+        return new Promise(function(resolve, reject) {
+          resolve();
+        });
       });
 
 
@@ -461,7 +465,7 @@ describe('workers', function() {
 
     describe('error', function() {
 
-      it('should complete with error', function(done) {
+      it('should handle error', function(done) {
 
         // given
         workers = Workers(engineUrl, {
@@ -499,7 +503,124 @@ describe('workers', function() {
       });
 
 
-      it('should complete with BPMN error', function(done) {
+      it('should handle Promise rejection', function(done) {
+
+        // given
+        workers = Workers(engineUrl, {
+          workerId: 'test-worker',
+          use: [
+            Logger
+          ]
+        });
+
+        var workerId = workers.options.workerId;
+
+        workers.registerWorker('work:A', function(context) {
+
+          // when
+          return new Promise(function(resolve, reject) {
+            throw new Error('could not execute');
+          });
+
+        });
+
+        engineApi.startProcessByKey('TestProcess', {}, function(err) {
+
+          delay(3, function() {
+
+            engineApi.getWorkerLog(workerId, function(err, log) {
+
+              // then
+              expect(log).to.have.length(1);
+
+              expect(log[0].errorMessage).to.eql('could not execute');
+
+              done();
+            });
+          });
+
+        });
+
+      });
+
+
+      it('should handle async function throw', function(done) {
+
+        // given
+        workers = Workers(engineUrl, {
+          workerId: 'test-worker',
+          use: [
+            Logger
+          ]
+        });
+
+        var workerId = workers.options.workerId;
+
+        workers.registerWorker('work:A', async function(context) {
+
+          // when
+          throw new Error('could not execute');
+        });
+
+        engineApi.startProcessByKey('TestProcess', {}, function(err) {
+
+          delay(3, function() {
+
+            engineApi.getWorkerLog(workerId, function(err, log) {
+
+              // then
+              expect(log).to.have.length(1);
+
+              expect(log[0].errorMessage).to.eql('could not execute');
+
+              done();
+            });
+          });
+
+        });
+
+      });
+
+
+      it('should catch synchronously thrown error', function(done) {
+
+        // given
+        workers = Workers(engineUrl, {
+          workerId: 'test-worker',
+          use: [
+            Logger
+          ]
+        });
+
+        var workerId = workers.options.workerId;
+
+        workers.registerWorker('work:A', function(context, callback) {
+
+          // when
+          throw new Error('could not execute');
+        });
+
+        engineApi.startProcessByKey('TestProcess', {}, function(err) {
+
+          delay(3, function() {
+
+            engineApi.getWorkerLog(workerId, function(err, log) {
+
+              // then
+              expect(log).to.have.length(1);
+
+              expect(log[0].errorMessage).to.eql('could not execute');
+
+              done();
+            });
+          });
+
+        });
+
+      });
+
+
+      it('should handle BPMN error', function(done) {
 
         // given
         workers = Workers(engineUrl, {
