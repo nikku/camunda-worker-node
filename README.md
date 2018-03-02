@@ -152,7 +152,7 @@ workers.registerWorker('work:B', {
 });
 ```
 
-Read more about external task locking in the [Camunda Documentation](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/)
+Read more about external task locking in the [Camunda Documentation](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/).
 
 
 ## Extend Workers
