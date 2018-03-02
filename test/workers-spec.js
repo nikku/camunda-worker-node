@@ -78,6 +78,15 @@ describe('workers', function() {
     }
   });
 
+  function createWorkers() {
+    return Workers(engineUrl, {
+      workerId: 'test-worker',
+      use: [
+        Logger
+      ]
+    });
+  }
+
 
   describe('api', function() {
 
@@ -241,19 +250,14 @@ describe('workers', function() {
     });
 
 
-    describe('variables', function() {
+    describe('should provide variables', function() {
 
-      it('should fetch all (default)', function(done) {
+      it('all (default)', function(done) {
 
         // given
         var dateVar = new Date('2010-07-06T10:30:10.000Z');
 
-        workers = Workers(engineUrl, {
-          workerId: 'test-worker',
-          use: [
-            Logger
-          ]
-        });
+        workers = createWorkers();
 
         workers.registerWorker('work:A', function(context, callback) {
 
@@ -279,15 +283,10 @@ describe('workers', function() {
       });
 
 
-      it('should fetch specific', function(done) {
+      it('specific', function(done) {
 
         // given
-        workers = Workers(engineUrl, {
-          workerId: 'test-worker',
-          use: [
-            Logger
-          ]
-        });
+        workers = createWorkers();
 
         workers.registerWorker('work:A', [ 'numberVar' ], function(context, callback) {
 
@@ -313,7 +312,7 @@ describe('workers', function() {
     });
 
 
-    it('should handle multiple', function(done) {
+    it('should badge execute tasks', function(done) {
 
       var trace = [];
 
@@ -463,17 +462,67 @@ describe('workers', function() {
     });
 
 
-    describe('error', function() {
+    describe('should extend lock', function() {
 
-      it('should handle error', function(done) {
+      it('callback style', function(done) {
 
         // given
-        workers = Workers(engineUrl, {
-          workerId: 'test-worker',
-          use: [
-            Logger
-          ]
+        workers = createWorkers();
+
+        workers.registerWorker('work:A', function(context, callback) {
+
+          // then
+          var extendLock = context.extendLock;
+
+          expect(extendLock).to.exist;
+
+          extendLock(5000, function(err) {
+
+            expect(err).not.to.exist;
+
+            callback(err);
+
+            delay(1, done);
+          });
         });
+
+        // when
+        engineApi.startProcessByKey('TestProcess', {}, noop);
+      });
+
+
+      it('promise style', function(done) {
+
+        // given
+        workers = createWorkers();
+
+        workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
+
+          // then
+          var extendLock = context.extendLock;
+
+          expect(extendLock).to.exist;
+
+          await extendLock(5000);
+
+          delay(1, done);
+
+          return {};
+        });
+
+        // when
+        engineApi.startProcessByKey('TestProcess', {}, noop);
+      });
+
+    });
+
+
+    describe('should handle error', function() {
+
+      it('passed via callback', function(done) {
+
+        // given
+        workers = createWorkers();
 
         var workerId = workers.options.workerId;
 
@@ -503,15 +552,10 @@ describe('workers', function() {
       });
 
 
-      it('should handle Promise rejection', function(done) {
+      it('Promise rejection', function(done) {
 
         // given
-        workers = Workers(engineUrl, {
-          workerId: 'test-worker',
-          use: [
-            Logger
-          ]
-        });
+        workers = createWorkers();
 
         var workerId = workers.options.workerId;
 
@@ -544,15 +588,10 @@ describe('workers', function() {
       });
 
 
-      it('should handle async function throw', function(done) {
+      it('async function throw', function(done) {
 
         // given
-        workers = Workers(engineUrl, {
-          workerId: 'test-worker',
-          use: [
-            Logger
-          ]
-        });
+        workers = createWorkers();
 
         var workerId = workers.options.workerId;
 
@@ -582,15 +621,10 @@ describe('workers', function() {
       });
 
 
-      it('should catch synchronously thrown error', function(done) {
+      it('synchronously thrown', function(done) {
 
         // given
-        workers = Workers(engineUrl, {
-          workerId: 'test-worker',
-          use: [
-            Logger
-          ]
-        });
+        workers = createWorkers();
 
         var workerId = workers.options.workerId;
 
@@ -619,44 +653,40 @@ describe('workers', function() {
 
       });
 
+    });
 
-      it('should handle BPMN error', function(done) {
 
-        // given
-        workers = Workers(engineUrl, {
-          workerId: 'test-worker',
-          use: [
-            Logger
-          ]
+    it('should trigger BPMN error', function(done) {
+
+      // given
+      workers = createWorkers();
+
+      workers.registerWorker('work:A', function(context, callback) {
+
+        // when
+        callback(null, {
+          errorCode: 'some-error'
         });
+      });
 
-        workers.registerWorker('work:A', function(context, callback) {
+      engineApi.startProcessByKey('TestProcess', {}, function(err, processInstance) {
 
-          // when
-          callback(null, {
-            errorCode: 'some-error'
+        delay(3, function() {
+
+          engineApi.getActivityInstances(processInstance.id, function(err, activityInstances) {
+
+            // then
+            var nestedInstances = activityInstances.childActivityInstances;
+
+            expect(nestedInstances).to.have.length(1);
+            expect(nestedInstances[0].activityId).to.eql('Task_C');
+
+            done();
           });
-        });
-
-        engineApi.startProcessByKey('TestProcess', {}, function(err, processInstance) {
-
-          delay(3, function() {
-
-            engineApi.getActivityInstances(processInstance.id, function(err, activityInstances) {
-
-              // then
-              var nestedInstances = activityInstances.childActivityInstances;
-
-              expect(nestedInstances).to.have.length(1);
-              expect(nestedInstances[0].activityId).to.eql('Task_C');
-
-              done();
-            });
-          });
-
         });
 
       });
+
     });
 
   });

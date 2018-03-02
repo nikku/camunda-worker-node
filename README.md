@@ -53,8 +53,9 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 * Implement workers with node-style callbacks or [`async` functions](#workers-as-async-functions)
 * Complete tasks with updated variables or fail with errors
 * Trigger [BPMN errors](#trigger-bpmn-errors)
-* [Extend via plugins](#extend-workers)
+* [Configure and Extend Task Locks](#task-locks)
 * Configure [logging](#logging) or [authentication](#authentication)
+* [Extend via plugins](#extend-workers)
 
 
 ## Resources
@@ -125,6 +126,33 @@ workers.registerWorker('work:B', function(context, callback) {
   });
 });
 ```
+
+
+## Task Locks
+
+You may configure the initial lock time (defaults to 10 seconds) on worker registration.
+
+At the same time you may use the method `extendLock`, provided via the task context,
+to increase the lock time while the worker is busy.
+
+```javascript
+// configure three seconds as initial lock time
+workers.registerWorker('work:B', {
+  lockTime: 3000,
+  variables: [ 'a' ]
+}, async function(context) {
+
+  var extendLock = context.extendLock;
+
+  // extend the lock for another five seconds
+  await extendLock(5000);
+
+  // complete task
+  return {};
+});
+```
+
+Read more about external task locking in the [Camunda Documentation](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/)
 
 
 ## Extend Workers
