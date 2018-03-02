@@ -57,6 +57,12 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 * Configure [logging](#logging) or [authentication](#authentication)
 
 
+## Resources
+
+* [Example](./example)
+* [Issues](https://github.com/nikku/camunda-worker-node/issues)
+
+
 ## Workers as async Functions
 
 ES6 style async/await to implement workers is fully supported:

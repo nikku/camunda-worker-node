@@ -10,6 +10,7 @@ var uuid = require('uuid');
 var debugWorkers = require('debug')('workers');
 
 var debugShipment = require('debug')('worker:shipment');
+var debugCheckout = require('debug')('worker:checkout');
 
 var workers = new Workers(engineEndpoint, {
   use: [
@@ -18,9 +19,13 @@ var workers = new Workers(engineEndpoint, {
 });
 
 
-workers.registerWorker('orderProcess:shipment', [ 'order' ], function(context, callback) {
+function shipOrder(context, callback) {
 
-  var order = context.variables.order;
+  const {
+    variables
+  } = context;
+
+  var order = variables.order;
 
   if (Math.random() > 0.8) {
     debugShipment('failed to ship order[id=%s]', order.orderId);
@@ -40,8 +45,43 @@ workers.registerWorker('orderProcess:shipment', [ 'order' ], function(context, c
       order: order
     }
   });
+}
 
-});
+async function checkout(context) {
+
+  const {
+    variables
+  } = context;
+
+  const goods = variables.goods;
+
+  if (!goods || goods.length === 0) {
+    throw new Error('no goods in basket');
+  }
+
+  // do actual work here, write database, reserve goods
+  const order = {
+    orderId: uuid.v4(),
+    goods
+  };
+
+  debugCheckout(
+    'created order[orderId=%s] with %s goods',
+    order.orderId,
+    order.goods.length
+  );
+
+  // notify we are done with a new order variable
+  return {
+    variables: {
+      order: order
+    }
+  };
+}
+
+workers.registerWorker('orderProcess:shipment', [ 'order' ], shipOrder);
+
+workers.registerWorker('orderProcess:checkout', [ 'goods' ], checkout);
 
 
 workers.on('start', function() {
