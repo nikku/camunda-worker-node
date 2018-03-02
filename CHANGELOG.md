@@ -6,7 +6,11 @@ All notable changes to [camunda-worker-node](https://github.com/nikku/camunda-wo
 
 ___Note:__ Yet to be released changes appear here._
 
-## 0.8.0
+## 1.0.1
+
+* `DOCS`: improve example
+
+## 1.0.0
 
 * `FEAT`: support promises returned from workers and async functions
 * `CHORE`: handle synchronously thrown errors
