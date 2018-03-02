@@ -109,7 +109,7 @@ We employ [debug](https://www.npmjs.com/package/debug) for logging.
 
 Use the [`Logger` extension](./lib/logger.js) in combination with `DEBUG=*` to capture a full trace of what's going on under the hood:
 
-```
+```bash
 DEBUG=* node start-workers.js
 ```
 
@@ -191,7 +191,7 @@ worker.remove();
 
 ## Installation
 
-```
+```bash
 npm i --save camunda-worker-node
 ```
 
@@ -200,13 +200,13 @@ npm i --save camunda-worker-node
 
 Install dependencies:
 
-```
+```bash
 npm install
 ```
 
 Lint and run all tests:
 
-```
+```bash
 DEBUG=worker* npm run all
 ```
 
