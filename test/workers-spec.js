@@ -1,5 +1,3 @@
-var fs = require('fs');
-
 var expect = require('chai').expect;
 
 var extend = require('xtend');
@@ -11,28 +9,15 @@ var EngineApi = require('./engine/api');
 
 var debug = require('debug')('workers-spec');
 
-
-function delay(seconds, fn) {
-  return setTimeout(fn, seconds * 1000);
-}
-
-function log(worker, context) {
-
-  return {
-    worker: worker,
-    context: {
-      topicName: context.topicName,
-      activityId: context.activityId,
-      processInstanceId: context.processInstanceId
-    }
-  };
-}
+var {
+  delay
+} = require('./helper');
 
 
 describe('workers', function() {
 
   // slow tests...
-  this.timeout(10000);
+  this.timeout(12000);
 
 
   var engineUrl = 'http://localhost:8080/engine-rest';
@@ -42,45 +27,30 @@ describe('workers', function() {
 
   var workers, deployment;
 
-  beforeEach(function(done) {
-
-    var inputStream = fs.createReadStream(__dirname + '/process.bpmn');
-
-    engineApi.deploy(inputStream, function(err, newDeployment) {
-
-      if (err) {
-        return done(err);
-      }
-
-      deployment = newDeployment;
-
-      done();
-    });
-
+  beforeEach(async function() {
+    deployment = await engineApi.deploy(__dirname + '/process.bpmn');
   });
 
-  afterEach(function(done) {
+  afterEach(async function() {
     if (workers) {
+      await workers.shutdown();
 
-      workers.shutdown(function() {
-        var registeredWorkers = workers.workers;
-
-        Object.keys(registeredWorkers).forEach(function(topic) {
-          registeredWorkers[topic].remove();
-        });
-      });
+      workers = null;
     }
 
     if (deployment) {
-      engineApi.undeploy(deployment, done);
-    } else {
-      done();
+      await delay(1);
+
+      await engineApi.undeploy(deployment);
+
+      deployment = null;
     }
   });
 
   function createWorkers() {
     return Workers(engineUrl, {
-      workerId: 'test-worker',
+      pollingDelay: 0,
+      pollingInterval: 500,
       use: [
         Logger
       ]
@@ -215,21 +185,29 @@ describe('workers', function() {
 
   describe('task execution', function() {
 
+    function log(context) {
+
+      return {
+        topicName: context.topicName,
+        activityId: context.activityId,
+        processInstanceId: context.processInstanceId
+      };
+    }
+
+
     it('should provide context', function(done) {
 
       // given
-      workers = Workers(engineUrl, {
-        workerId: 'test-worker',
-        use: [
-          Logger
-        ]
-      });
+      engineApi.startProcessByKey('TestProcess', {});
 
-      workers.registerWorker('work:A', function(context, callback) {
+      workers = createWorkers();
+
+      // when
+      workers.registerWorker('work:A', async function(context) {
 
         // then
         expect(context.topicName).to.eql('work:A');
-        expect(context.workerId).to.eql('test-worker');
+        expect(context.workerId).to.eql(workers.options.workerId);
 
         expect(context.id).to.exist;
         expect(context.lockExpirationTime).to.exist;
@@ -240,13 +218,8 @@ describe('workers', function() {
 
         expect(context.variables).to.eql({});
 
-        callback(null);
-
-        delay(1, done);
+        done();
       });
-
-      // when
-      engineApi.startProcessByKey('TestProcess', {}, noop);
     });
 
 
@@ -257,38 +230,49 @@ describe('workers', function() {
         // given
         var dateVar = new Date('2010-07-06T10:30:10.000Z');
 
+        engineApi.startProcessByKey('TestProcess', {
+          numberVar: 1,
+          objectVar: {
+            name: 'Walter'
+          },
+          dateVar: dateVar
+        });
+
         workers = createWorkers();
 
-        workers.registerWorker('work:A', function(context, callback) {
+        // when
+        workers.registerWorker('work:A', async function(context) {
 
           // then
           // fetching all variables
           expect(context.variables).to.eql({
             numberVar: 1,
-            objectVar: { name: 'Walter' },
+            objectVar: {
+              name: 'Walter'
+            },
             dateVar: dateVar
           });
 
-          callback(null);
-
-          delay(1, done);
+          done();
         });
-
-        // when
-        engineApi.startProcessByKey('TestProcess', {
-          numberVar: 1,
-          objectVar: { name: 'Walter' },
-          dateVar: dateVar
-        }, noop);
       });
 
 
       it('specific', function(done) {
 
         // given
+        engineApi.startProcessByKey('TestProcess', {
+          numberVar: 1,
+          objectVar: {
+            name: 'Walter'
+          },
+          dateVar: new Date('2010-07-06T10:30:10.000Z')
+        });
+
         workers = createWorkers();
 
-        workers.registerWorker('work:A', [ 'numberVar' ], function(context, callback) {
+        // when
+        workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
 
           // then
           // fetching all variables
@@ -296,58 +280,50 @@ describe('workers', function() {
             numberVar: 1
           });
 
-          callback(null);
-
-          delay(1, done);
+          done();
         });
-
-        // when
-        engineApi.startProcessByKey('TestProcess', {
-          numberVar: 1,
-          objectVar: { name: 'Walter' },
-          dateVar: new Date('2010-07-06T10:30:10.000Z')
-        }, noop);
       });
 
     });
 
 
-    it('should badge execute tasks', function(done) {
+    it('should batch execute tasks', async function() {
 
+      // given
       var trace = [];
 
-      workers = Workers(engineUrl, {
-        workerId: 'test-worker',
-        use: [ Logger ]
-      });
+      workers = createWorkers();
 
-      workers.registerWorker('work:A', function(context, callback) {
+      workers.registerWorker('work:A', async function(context) {
         trace.push('work:A');
-
-        callback(null);
       });
 
-
-      for (var i = 0; i < 3; i++) {
-        engineApi.startProcessByKey('TestProcess', function() { });
+      // when
+      for (var i = 0; i < 10; i++) {
+        await engineApi.startProcessByKey('TestProcess');
       }
 
-      delay(3, function() {
+      await delay(3);
 
-        expect(trace).to.eql([
-          'work:A',
-          'work:A',
-          'work:A'
-        ]);
-
-        done();
-      });
-
+      // then
+      expect(trace).to.eql([
+        'work:A',
+        'work:A',
+        'work:A',
+        'work:A',
+        'work:A',
+        'work:A',
+        'work:A',
+        'work:A',
+        'work:A',
+        'work:A'
+      ]);
     });
 
 
-    it('should execute process', function(done) {
+    it('should execute process', async function() {
 
+      // given
       var trace = [];
 
       var nestedObjectVar = {
@@ -366,14 +342,14 @@ describe('workers', function() {
         objectVar: { name: 'Walter' }
       };
 
-      workers = Workers(engineUrl, {
-        workerId: 'test-worker',
-        use: [
-          Logger
-        ]
-      });
+      var {
+        id
+      } = await engineApi.startProcessByKey('TestProcess', startVariables);
 
-      // callback style worker
+      workers = createWorkers();
+
+      // when
+      // (1) callback style worker
       workers.registerWorker('work:A', [
         'numberVar',
         'objectVar',
@@ -381,7 +357,7 @@ describe('workers', function() {
         'nonExistingVar'
       ], function(context, callback) {
 
-        trace.push(log('work:A', context));
+        trace.push(log(context));
 
         expect(context.variables).to.eql({
           numberVar: 1,
@@ -395,17 +371,15 @@ describe('workers', function() {
             nestedObjectVar: nestedObjectVar
           }
         });
-
       });
 
-
-      // promise based worker
+      // (2) promise based worker
       workers.registerWorker('work:B', [
         'stringVar',
         'nestedObjectVar'
       ], function(context) {
 
-        trace.push(log('work:B', context));
+        trace.push(log(context));
 
         expect(context.variables).to.eql({
           stringVar: 'BAR',
@@ -417,48 +391,25 @@ describe('workers', function() {
         });
       });
 
+      await delay(4);
 
-      engineApi.startProcessByKey('TestProcess', startVariables, function(err, processInstance) {
-
-        if (err) {
-          return done(err);
+      // then
+      expect(trace).to.eql([
+        {
+          topicName: 'work:A',
+          activityId: 'Task_A',
+          processInstanceId: id
+        },
+        {
+          topicName: 'work:B',
+          activityId: 'Task_B',
+          processInstanceId: id
         }
+      ]);
 
-        delay(5, function() {
-
-          expect(trace).to.eql([
-            {
-              worker: 'work:A',
-              context: {
-                topicName: 'work:A',
-                activityId: 'Task_A',
-                processInstanceId: processInstance.id
-              }
-            },
-            {
-              worker: 'work:B',
-              context: {
-                topicName: 'work:B',
-                activityId: 'Task_B',
-                processInstanceId: processInstance.id
-              }
-            }
-          ]);
-
-          engineApi.getProcessInstance(processInstance.id, function(err, processInstance) {
-
-            if (err) {
-              return done(err);
-            }
-
-            expect(processInstance).not.to.exist;
-
-            done();
-          });
-
-        });
-
-      });
+      expect(
+        await engineApi.getProcessInstance(id)
+      ).not.to.exist;
     });
 
 
@@ -467,6 +418,9 @@ describe('workers', function() {
       it('callback style', function(done) {
 
         // given
+        engineApi.startProcessByKey('TestProcess', {});
+
+        // when
         workers = createWorkers();
 
         workers.registerWorker('work:A', function(context, callback) {
@@ -477,23 +431,20 @@ describe('workers', function() {
           expect(extendLock).to.exist;
 
           extendLock(5000, function(err) {
+            callback();
 
-            expect(err).not.to.exist;
-
-            callback(err);
-
-            delay(1, done);
+            done();
           });
         });
-
-        // when
-        engineApi.startProcessByKey('TestProcess', {}, noop);
       });
 
 
       it('promise style', function(done) {
 
         // given
+        engineApi.startProcessByKey('TestProcess', {});
+
+        // when
         workers = createWorkers();
 
         workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
@@ -505,13 +456,8 @@ describe('workers', function() {
 
           await extendLock(5000);
 
-          delay(1, done);
-
-          return {};
+          done();
         });
-
-        // when
-        engineApi.startProcessByKey('TestProcess', {}, noop);
       });
 
     });
@@ -519,174 +465,131 @@ describe('workers', function() {
 
     describe('should handle error', function() {
 
-      it('passed via callback', function(done) {
+      it('passed via callback', async function() {
 
         // given
+        await engineApi.startProcessByKey('TestProcess');
+
         workers = createWorkers();
 
-        var workerId = workers.options.workerId;
-
+        // when
         workers.registerWorker('work:A', function(context, callback) {
-
-          // when
           callback(new Error('could not execute'));
         });
 
-        engineApi.startProcessByKey('TestProcess', {}, function(err) {
+        await delay(1);
 
-          delay(3, function() {
+        // then
+        var workerId = workers.options.workerId;
 
-            engineApi.getWorkerLog(workerId, function(err, log) {
+        const log = await engineApi.getWorkerLog(workerId);
 
-              // then
-              expect(log).to.have.length(1);
-
-              expect(log[0].errorMessage).to.eql('could not execute');
-
-              done();
-            });
-          });
-
-        });
-
+        expect(log).to.have.length(1);
+        expect(log[0].errorMessage).to.eql('could not execute');
       });
 
 
-      it('Promise rejection', function(done) {
+      it('promise rejection', async function() {
 
         // given
+        await engineApi.startProcessByKey('TestProcess');
+
         workers = createWorkers();
 
-        var workerId = workers.options.workerId;
-
+        // when
         workers.registerWorker('work:A', function(context) {
-
-          // when
-          return new Promise(function(resolve, reject) {
-            throw new Error('could not execute');
-          });
-
+          return Promise.reject(
+            new Error('could not execute')
+          );
         });
 
-        engineApi.startProcessByKey('TestProcess', {}, function(err) {
+        await delay(1);
 
-          delay(3, function() {
+        // then
+        var workerId = workers.options.workerId;
 
-            engineApi.getWorkerLog(workerId, function(err, log) {
+        const log = await engineApi.getWorkerLog(workerId);
 
-              // then
-              expect(log).to.have.length(1);
-
-              expect(log[0].errorMessage).to.eql('could not execute');
-
-              done();
-            });
-          });
-
-        });
-
+        expect(log).to.have.length(1);
+        expect(log[0].errorMessage).to.eql('could not execute');
       });
 
 
-      it('async function throw', function(done) {
+      it('async function throw', async function() {
 
         // given
+        await engineApi.startProcessByKey('TestProcess');
+
         workers = createWorkers();
 
-        var workerId = workers.options.workerId;
-
+        // when
         workers.registerWorker('work:A', async function(context) {
-
-          // when
           throw new Error('could not execute');
         });
 
-        engineApi.startProcessByKey('TestProcess', {}, function(err) {
+        await delay(1);
 
-          delay(3, function() {
+        // then
+        var workerId = workers.options.workerId;
 
-            engineApi.getWorkerLog(workerId, function(err, log) {
+        const log = await engineApi.getWorkerLog(workerId);
 
-              // then
-              expect(log).to.have.length(1);
-
-              expect(log[0].errorMessage).to.eql('could not execute');
-
-              done();
-            });
-          });
-
-        });
-
+        expect(log).to.have.length(1);
+        expect(log[0].errorMessage).to.eql('could not execute');
       });
 
 
-      it('synchronously thrown', function(done) {
+      it('synchronously thrown', async function() {
 
         // given
+        await engineApi.startProcessByKey('TestProcess');
+
         workers = createWorkers();
 
-        var workerId = workers.options.workerId;
-
+        // when
         workers.registerWorker('work:A', function(context, callback) {
-
-          // when
           throw new Error('could not execute');
         });
 
-        engineApi.startProcessByKey('TestProcess', {}, function(err) {
+        await delay(1);
 
-          delay(3, function() {
+        // then
+        var workerId = workers.options.workerId;
 
-            engineApi.getWorkerLog(workerId, function(err, log) {
+        const log = await engineApi.getWorkerLog(workerId);
 
-              // then
-              expect(log).to.have.length(1);
-
-              expect(log[0].errorMessage).to.eql('could not execute');
-
-              done();
-            });
-          });
-
-        });
-
+        expect(log).to.have.length(1);
+        expect(log[0].errorMessage).to.eql('could not execute');
       });
 
     });
 
 
-    it('should trigger BPMN error', function(done) {
+    it('should trigger BPMN error', async function() {
 
       // given
+      const {
+        id
+      } = await engineApi.startProcessByKey('TestProcess');
+
       workers = createWorkers();
 
-      workers.registerWorker('work:A', function(context, callback) {
-
-        // when
-        callback(null, {
+      // when
+      workers.registerWorker('work:A', async function(context) {
+        return {
           errorCode: 'some-error'
-        });
+        };
       });
 
-      engineApi.startProcessByKey('TestProcess', {}, function(err, processInstance) {
+      await delay(2);
 
-        delay(3, function() {
+      // then
+      const activityInstances = await engineApi.getActivityInstances(id);
 
-          engineApi.getActivityInstances(processInstance.id, function(err, activityInstances) {
+      const nestedInstances = activityInstances.childActivityInstances;
 
-            // then
-            var nestedInstances = activityInstances.childActivityInstances;
-
-            expect(nestedInstances).to.have.length(1);
-            expect(nestedInstances[0].activityId).to.eql('Task_C');
-
-            done();
-          });
-        });
-
-      });
-
+      expect(nestedInstances).to.have.length(1);
+      expect(nestedInstances[0].activityId).to.eql('Task_C');
     });
 
   });
@@ -694,20 +597,33 @@ describe('workers', function() {
 
   describe('typed', function() {
 
-    it('should preserve Object serialization', function(done) {
+    it('should preserve Object serialization', async function() {
 
+      // given
       var existingUser = {
         type: 'Object',
-        value: { name: 'Hugo' },
+        value: {
+          name: 'Hugo'
+        },
         valueInfo: {
           serializationDataFormat: 'application/json',
           objectTypeName: 'my.example.Customer'
         }
       };
 
+      const {
+        id
+      } = await engineApi.startProcessByKey(
+        'TestProcess',
+        { existingUser: existingUser }
+      );
+
       var newUser = {
         type: 'Object',
-        value: { name: 'Bert', age: 50 },
+        value: {
+          name: 'Bert',
+          age: 50
+        },
         valueInfo: {
           serializationDataFormat: 'application/json',
           objectTypeName: 'my.example.Customer'
@@ -716,58 +632,52 @@ describe('workers', function() {
 
       workers = Workers(engineUrl);
 
-      workers.registerWorker('work:A', [ 'existingUser' ], function(context, callback) {
+      // when
+      workers.registerWorker('work:A', [ 'existingUser' ], async function(context) {
 
         var existingUser = context.variables.existingUser;
 
         // expect deserialized user
-        expect(existingUser).to.eql({ name: 'Hugo' });
+        expect(existingUser).to.eql({
+          name: 'Hugo'
+        });
 
         // update
         existingUser.age = 31;
 
-        callback(null, {
+        return {
           variables: {
-            existingUser: existingUser,
-            // pass serialized new user
+            // updated existing user
+            existingUser,
+            // serialized new user
             newUser: newUser
           }
-        });
+        };
       });
 
+      await delay(2);
 
-      engineApi.startProcessByKey('TestProcess', { existingUser: existingUser }, function(err, processInstance) {
+      const newUserVar = await engineApi.getProcessVariable(id, 'newUser');
 
-        delay(3, function() {
-
-          engineApi.getProcessVariable(processInstance.id, 'newUser', function(err, variable) {
-
-            var rawNewUser = extend({}, newUser, { value: JSON.stringify(newUser.value) });
-
-            // expect saved new user
-            expect(variable).to.eql(rawNewUser);
-
-            engineApi.getProcessVariable(processInstance.id, 'existingUser', function(err, variable) {
-
-              var rawExistingUser = extend({}, newUser, {
-                value: JSON.stringify({
-                  name: 'Hugo',
-                  age: 31
-                })
-              });
-
-              // expect modified existing user
-              expect(variable).to.eql(rawExistingUser);
-
-              done(err);
-            });
-
-          });
-
-        });
-
+      var rawNewUser = extend({}, newUser, {
+        value: JSON.stringify(newUser.value)
       });
 
+      // then
+      // expect saved new user
+      expect(newUserVar).to.eql(rawNewUser);
+
+      var existingUserVar = await engineApi.getProcessVariable(id, 'existingUser');
+
+      var rawExistingUser = extend({}, newUser, {
+        value: JSON.stringify({
+          name: 'Hugo',
+          age: 31
+        })
+      });
+
+      // expect modified existing user
+      expect(existingUserVar).to.eql(rawExistingUser);
     });
 
   });

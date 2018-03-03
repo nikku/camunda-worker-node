@@ -4,6 +4,12 @@ var uuid = require('uuid');
 
 var BaseApi = require('../../lib/engine/api');
 
+var {
+  FormData
+} = require('../../lib/engine/fetch');
+
+var fs = require('fs');
+
 
 function id() {
   return uuid.v4();
@@ -14,117 +20,75 @@ function Api(baseUrl, requestOptions, apiVersion) {
 
   BaseApi.call(this, baseUrl, requestOptions, apiVersion);
 
-  var _req = this._req;
+  this.deploy = function(filePath) {
 
-  var serializeVariables = this.serializeVariables;
+    var xmlStream = fs.createReadStream(filePath);
 
+    var formData = new FormData();
 
-  this.deploy = function(xmlStream, callback) {
+    formData.append('deployment-name', id());
+    formData.append('process', xmlStream);
 
-    _req('post', '/deployment/create', {
-      formData: {
-        'deployment-name': id(),
-        'process': xmlStream
-      }
-    }, function(err, response, body) {
-
-      if (err) {
-        return callback(err);
-      }
-
-      var deployment = JSON.parse(body);
-
-      return callback(null, deployment);
+    return this._req('post', '/deployment/create', {
+      body: formData
     });
   };
 
-  this.undeploy = function(deployment, callback) {
-    _req('delete', '/deployment/' + deployment.id + '?cascade=true', function(err, response, body) {
-
-      if (err) {
-        return callback(err);
-      }
-
-      callback(err, response, body);
-    });
-
+  this.undeploy = function(deployment) {
+    return this._req(
+      'delete',
+      `/deployment/${deployment.id}?cascade=true`,
+      { json: true },
+      { allowedCodes: [ 404 ] }
+    );
   };
 
-  this.startProcessByKey = function(definitionKey, variables, callback) {
-
-    if (typeof variables === 'function') {
-      callback = variables;
-      variables = {};
-    }
-
-    _req('post', '/process-definition/key/' + definitionKey + '/start', {
-      json: true,
-      body: {
-        variables: serializeVariables(variables)
+  this.startProcessByKey = function(definitionKey, variables) {
+    return this._req(
+      'post',
+      `/process-definition/key/${definitionKey}/start`,
+      {
+        json: true,
+        body: {
+          variables: this.serializeVariables(variables || {})
+        }
       }
-    }, function(err, response, body) {
-
-      if (err) {
-        return callback(err);
-      }
-
-      return callback(null, body);
-    });
+    );
   };
 
-  this.getProcessInstance = function(processInstanceId, callback) {
-
-    _req('get', '/process-instance/' + processInstanceId, { json: true }, function(err, response, body) {
-
-      if (response && response.statusCode === 404) {
-        return callback();
-      }
-
-      if (err) {
-        return callback(err);
-      }
-
-      return callback(null, body);
-    });
-
+  this.getProcessInstance = function(processInstanceId) {
+    return this._req(
+      'get',
+      `/process-instance/${processInstanceId}`,
+      { json: true },
+      { allowedCodes: [ 404 ] }
+    );
   };
 
-  this.getProcessVariable = function(processInstanceId, name, callback) {
-
-    _req('get', '/process-instance/' + processInstanceId + '/variables/' + name + '?deserializeValue=false', { json: true }, function(err, response, body) {
-
-      if (response && response.statusCode === 404) {
-        return callback();
-      }
-
-      if (err) {
-        return callback(err);
-      }
-
-      return callback(null, body);
-    });
+  this.getProcessVariable = function(processInstanceId, name) {
+    return this._req(
+      'get',
+      `/process-instance/${processInstanceId}/variables/${name}?deserializeValue=false`,
+      { json: true },
+      { allowedCodes: [ 404 ] }
+    );
   };
 
-  this.getWorkerLog = function(workerId, callback) {
-
-    _req('get', '/history/external-task-log?workerId=' + workerId, { json: true }, function(err, response, body) {
-      if (err) {
-        return callback(err);
-      }
-
-      return callback(null, body);
-    });
+  this.getWorkerLog = function(workerId) {
+    return this._req(
+      'get',
+      `/history/external-task-log?workerId=${workerId}`,
+      { json: true }
+    );
   };
 
-  this.getActivityInstances = function(processInstanceId, callback) {
+  this.getActivityInstances = function(processInstanceId) {
 
-    _req('get', '/process-instance/' + processInstanceId + '/activity-instances', { json: true }, function(err, response, body) {
-      if (err) {
-        return callback(err);
-      }
-
-      return callback(null, body);
-    });
+    return this._req(
+      'get',
+      `/process-instance/${processInstanceId}/activity-instances`,
+      { json: true }
+    );
   };
 
 }

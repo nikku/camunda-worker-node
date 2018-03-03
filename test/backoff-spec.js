@@ -1,5 +1,3 @@
-var fs = require('fs');
-
 var expect = require('chai').expect;
 
 var Workers = require('../');
@@ -9,10 +7,9 @@ var Backoff = require('../lib/backoff');
 
 var EngineApi = require('./engine/api');
 
-
-function delay(seconds, fn) {
-  return setTimeout(fn, seconds * 1000);
-}
+var {
+  delay
+} = require('./helper');
 
 
 describe('backoff', function() {
@@ -28,73 +25,60 @@ describe('backoff', function() {
 
   var workers, deployment;
 
-  beforeEach(function(done) {
-
-    var inputStream = fs.createReadStream(__dirname + '/process.bpmn');
-
-    engineApi.deploy(inputStream, function(err, newDeployment) {
-
-      if (err) {
-        return done(err);
-      }
-
-      deployment = newDeployment;
-
-      done();
-    });
-
+  beforeEach(async function() {
+    deployment = await engineApi.deploy(__dirname + '/process.bpmn');
   });
 
-  afterEach(function(done) {
+  afterEach(async function() {
     if (workers) {
+      await workers.shutdown();
 
-      workers.shutdown(function() {
-        var registeredWorkers = workers.workers;
-
-        Object.keys(registeredWorkers).forEach(function(topic) {
-          registeredWorkers[topic].remove();
-        });
-      });
+      workers = null;
     }
 
     if (deployment) {
-      engineApi.undeploy(deployment, done);
+      await delay(1);
+
+      await engineApi.undeploy(deployment);
+
+      deployment = null;
     }
   });
 
 
   describe('task execution', function() {
 
-    it('should work with backoff', function(done) {
+    it('should work with backoff', async function() {
+
+      // given
+      for (var i = 0; i < 3; i++) {
+        await engineApi.startProcessByKey('TestProcess');
+      }
 
       var trace = [];
 
       workers = Workers(engineUrl, {
-        workerId: 'test-worker',
-        use: [ Logger, Backoff ]
+        pollingDelay: 0,
+        pollingInterval: 500,
+        use: [
+          Logger,
+          Backoff
+        ]
       });
 
-      workers.registerWorker('work:A', function(context, callback) {
+      workers.registerWorker('work:A', async function(context) {
+        // when
         trace.push('work:A');
-
-        callback(null);
       });
 
+      await delay(2);
 
-      for (var i = 0; i < 3; i++) {
-        engineApi.startProcessByKey('TestProcess', function() { });
-      }
-
-      delay(3, function() {
-
-        expect(trace).to.eql([
-          'work:A',
-          'work:A',
-          'work:A'
-        ]);
-
-        done();
-      });
+      // then
+      expect(trace).to.eql([
+        'work:A',
+        'work:A',
+        'work:A'
+      ]);
 
     });
 
