@@ -6,6 +6,25 @@ All notable changes to [camunda-worker-node](https://github.com/nikku/camunda-wo
 
 ___Note:__ Yet to be released changes appear here._
 
+## 2.0.0
+
+This is a major rewrite of camunda-worker-node.
+
+### Breaking Changes
+
+* `CHORE`: unify event names and parameters
+* `CHORE`: rename numerous API methods and make a few async
+* `CHORE`: rewrite to ES6 / require `async/await` support
+
+### Other Improvements
+
+* `FEAT`: collect and log timings
+* `FEAT`: control poll re-scheduling via `pollInterval` config
+* `CHORE`: detect and report invalid life-cycle transitions
+* `CHORE`: use fetch for Camunda REST api calls
+* `FIX`: make task execution fail-safe
+
+
 ## 1.1.0
 
 * `FEAT`: add ability to extend task locks ([`56e42e6a`](https://github.com/nikku/camunda-worker-node/commit/56e42e6ac6bc5db6178866f7d39e0f09cf4edb7a))
