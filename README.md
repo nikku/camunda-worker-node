@@ -19,19 +19,21 @@ var workers = Workers(engineEndpoint, {
 });
 
 // a worker may access and modify process variables
-workers.registerWorker('work:A', [ 'numberVar' ], function(context, callback) {
+workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
 
   var newNumber = context.variables.numberVar + 1;
 
+  // fail with an error if things go awry
+  if (ooops) {
+    throw new Error('no work done');
+  }
+
   // complete with update variables
-  callback(null, {
+  return {
     variables: {
       numberVar: newNumber
     }
-  });
-
-  // fail with an error if things go awry
-  callback(new Error('no work done'));
+  };
 });
 
 // shutdown the workers instance with the application
