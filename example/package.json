@@ -1,10 +1,15 @@
 {
   "name": "example",
   "version": "0.0.1",
-  "description": "A camunda external task / worker NodeJS example",
+  "description": "Example implementing external order processing with camunda-worker-node",
   "main": "index.js",
   "author": "Nico Rehwaldt <git_nikku@nixis.de>",
   "license": "MIT",
+  "scripts": {
+    "support:deploy": "node support/deploy.js",
+    "support:start-process": "node support/start-process.js",
+    "start-workers": "DEBUG=orderProcess:* node index.js"
+  },
   "dependencies": {
     "camunda-worker-node": "file:..",
     "debug": "^3.1.0",

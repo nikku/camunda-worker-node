@@ -7,10 +7,10 @@ var engineEndpoint = process.env.ENGINE_URL || 'http://localhost:8080/engine-res
 var uuid = require('uuid');
 
 
-var debugWorkers = require('debug')('workers');
+var debugWorkers = require('debug')('orderProcess:workers');
 
-var debugShipment = require('debug')('worker:shipment');
-var debugCheckout = require('debug')('worker:checkout');
+var debugShipment = require('debug')('orderProcess:worker:shipment');
+var debugCheckout = require('debug')('orderProcess:worker:checkout');
 
 var workers = new Workers(engineEndpoint, {
   use: [
