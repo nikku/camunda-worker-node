@@ -52,7 +52,7 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 
 ## Features
 
-* Implement workers with node-style callbacks or [`async` functions](#workers-as-async-functions)
+* Implement workers [node-style](#workers-node-style) or via [`async` functions](#workers-as-async-functions)
 * Complete tasks with updated variables or fail with errors
 * Trigger [BPMN errors](#trigger-bpmn-errors)
 * [Configure and Extend Task Locks](#task-locks)
@@ -65,6 +65,30 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 * [Example](./example)
 * [Issues](https://github.com/nikku/camunda-worker-node/issues)
 
+
+## Workers, Node Style
+
+Use the provided callback to pass task execution errors and data, node-style:
+
+```javascript
+// a worker can receive a node-style callback
+workers.registerWorker('work:B', function(context, callback) {
+
+  var newNumber = context.variables.numberVar + 1;
+
+  // indicate an error
+  callback(
+    new Error('no work done');
+  );
+
+  // or return actual result
+  callback(null, {
+    variables: {
+      numberVar: newNumber
+    }
+  });
+});
+```
 
 ## Workers as async Functions
 
@@ -121,11 +145,12 @@ DEBUG=* node start-workers.js
 You may indicate BPMN errors to trigger business defined exception handling:
 
 ```javascript
-workers.registerWorker('work:B', function(context, callback) {
+workers.registerWorker('work:B', async function(context) {
+
   // trigger business aka BPMN errors
-  callback(null, {
+  return {
     errorCode: 'some-bpmn-error'
-  });
+  };
 });
 ```
 
@@ -181,9 +206,9 @@ Workers(engineEndpoint, {
 It is possible to dynamically unregister a worker any time.
 
 ```javascript
-var worker = workers.registerWorker('someTopic', function(context, callback) {
+var worker = workers.registerWorker('someTopic', async(context) {
   // do work
-  callback(null);
+  console.log('doing work!');
 });
 
 // later
