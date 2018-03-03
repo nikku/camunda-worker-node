@@ -8,7 +8,7 @@ ___Note:__ Yet to be released changes appear here._
 
 ## 2.0.0
 
-This is a major rewrite of camunda-worker-node.
+This is a major rewrite of camunda-worker-node ([`a5d1f275`](https://github.com/nikku/camunda-worker-node/commit/a5d1f27510b79751bb77751216c145a7cd2bc942)).
 
 ### Breaking Changes
 
