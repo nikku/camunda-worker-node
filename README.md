@@ -64,6 +64,7 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 
 * [Example](./example)
 * [Issues](https://github.com/nikku/camunda-worker-node/issues)
+* [Changelog](./CHANGELOG.md)
 
 
 ## Workers, Node Style
