@@ -14,7 +14,7 @@ This is a major rewrite of camunda-worker-node ([`a5d1f275`](https://github.com/
 
 * `CHORE`: unify event names and parameters
 * `CHORE`: rename numerous API methods and make a few async
-* `CHORE`: rewrite to ES6 / require `async/await` support
+* `CHORE`: rewrite to ES6 / require `async/await` support; stick to version `v1.1.0` if you are locked in onto ES5
 
 ### Other Improvements
 
