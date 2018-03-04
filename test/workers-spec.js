@@ -49,15 +49,18 @@ describe('workers', function() {
     }
   });
 
-  function createWorkers() {
-    return Workers(engineUrl, {
+  function createWorkers(options = {}) {
+
+    options = extend({
       pollingDelay: 0,
       pollingInterval: 500,
       use: [
         Logger,
         Backoff
       ]
-    });
+    }, options);
+
+    return Workers(engineUrl, options);
   }
 
 
@@ -306,7 +309,7 @@ describe('workers', function() {
         await engineApi.startProcessByKey('TestProcess');
       }
 
-      await delay(3);
+      await delay(2);
 
       // then
       expect(trace).to.eql([
@@ -394,7 +397,101 @@ describe('workers', function() {
         });
       });
 
-      await delay(4);
+      await delay(3);
+
+      // then
+      expect(trace).to.eql([
+        {
+          topicName: 'work:A',
+          activityId: 'Task_A',
+          processInstanceId: id
+        },
+        {
+          topicName: 'work:B',
+          activityId: 'Task_B',
+          processInstanceId: id
+        }
+      ]);
+
+      expect(
+        await engineApi.getProcessInstance(id)
+      ).not.to.exist;
+    });
+
+
+    it('should execute process / no backoff', async function() {
+
+      // given
+      var trace = [];
+
+      var nestedObjectVar = {
+        id: '1111',
+        aList: [
+          'A',
+          'B'
+        ]
+      };
+
+      var dateVar = new Date('2010-07-06T10:30:10.000Z');
+
+      var startVariables = {
+        dateVar: dateVar,
+        numberVar: 1,
+        objectVar: { name: 'Walter' }
+      };
+
+      var {
+        id
+      } = await engineApi.startProcessByKey('TestProcess', startVariables);
+
+      workers = createWorkers({
+        use: [ Logger ]
+      });
+
+      // when
+      // (1) callback style worker
+      workers.registerWorker('work:A', [
+        'numberVar',
+        'objectVar',
+        'dateVar',
+        'nonExistingVar'
+      ], function(context, callback) {
+
+        trace.push(log(context));
+
+        expect(context.variables).to.eql({
+          numberVar: 1,
+          objectVar: { name: 'Walter' },
+          dateVar: dateVar
+        });
+
+        callback(null, {
+          variables: {
+            stringVar: 'BAR',
+            nestedObjectVar: nestedObjectVar
+          }
+        });
+      });
+
+      // (2) promise based worker
+      workers.registerWorker('work:B', [
+        'stringVar',
+        'nestedObjectVar'
+      ], function(context) {
+
+        trace.push(log(context));
+
+        expect(context.variables).to.eql({
+          stringVar: 'BAR',
+          nestedObjectVar: nestedObjectVar
+        });
+
+        return new Promise(function(resolve, reject) {
+          resolve();
+        });
+      });
+
+      await delay(3);
 
       // then
       expect(trace).to.eql([
