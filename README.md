@@ -11,11 +11,15 @@ This library exposes a simple API to implement external task workers for [Camund
 
 ```javascript
 var Workers = require('camunda-worker-node');
+var Backoff = require('camunda-worker-node/lib/backoff');
 
 var engineEndpoint = 'http://localhost:8080/engine-rest';
 
 var workers = Workers(engineEndpoint, {
-  workerId: 'some-worker-id'
+  workerId: 'some-worker-id',
+  use: [
+    Backoff
+  ]
 });
 
 // a worker may access and modify process variables
