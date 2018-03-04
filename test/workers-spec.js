@@ -513,6 +513,33 @@ describe('workers', function() {
     });
 
 
+    it('should NOT block polling', async function() {
+
+      // given
+      var pollTrace = [];
+
+      workers = createWorkers();
+
+      workers.on('poll', function() {
+        pollTrace.push(true);
+      });
+
+      workers.registerWorker('work:A', async function(context) {
+        pollTrace.push('work:A');
+
+        await delay(2);
+      });
+
+      // when
+      await engineApi.startProcessByKey('TestProcess');
+
+      await delay(2);
+
+      // then
+      expect(pollTrace.length).to.be.above(1);
+    });
+
+
     describe('should extend lock', function() {
 
       it('callback style', function(done) {
