@@ -7,6 +7,11 @@ All notable changes to [camunda-worker-node](https://github.com/nikku/camunda-wo
 ___Note:__ Yet to be released changes appear here._
 
 
+## 3.0.0
+
+* `FEAT`: move `pollingInterval` update to [Backoff](./lib/backoff.js) extension ([`ffae85c6`](https://github.com/nikku/camunda-worker-node/commit/ffae85c6aa95e0f3fe9bfcd48146e03a8e2b1d5b))
+* `CHORE`: add default log output to workers
+
 ## 2.1.0
 
 * `FEAT`: add metrics plug-in
