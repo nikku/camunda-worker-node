@@ -52,7 +52,8 @@ function shipOrder(context, callback) {
 async function checkout(context) {
 
   const {
-    variables
+    variables,
+    extendLock
   } = context;
 
   const goods = variables.goods;
@@ -72,6 +73,14 @@ async function checkout(context) {
     order.orderId,
     order.goods.length
   );
+
+  if (Math.random() > 0.6) {
+    debugCheckout('delayed order[orderId=%s]', order.orderId);
+
+    await extendLock(5000);
+
+    await delay(Math.trunc(Math.random() * 5));
+  }
 
   // notify we are done with a new order variable
   return {
@@ -98,3 +107,14 @@ workers.on('poll', function() {
 workers.on('error', function(err) {
   debugWorkers('error: %s', err);
 });
+
+
+// helpers ////////////////////
+
+function delay(seconds) {
+
+  return new Promise(function(resolve) {
+    setTimeout(resolve, seconds * 1000);
+  });
+
+}
