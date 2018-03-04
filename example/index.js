@@ -14,6 +14,7 @@ var debugShipment = require('debug')('orderProcess:worker:shipment');
 var debugCheckout = require('debug')('orderProcess:worker:checkout');
 
 var workers = new Workers(engineEndpoint, {
+  maxTasks: 10,
   use: [
     Backoff,
     Metrics
