@@ -6,6 +6,14 @@ All notable changes to [camunda-worker-node](https://github.com/nikku/camunda-wo
 
 ___Note:__ Yet to be released changes appear here._
 
+
+## 2.1.0
+
+* `FEAT`: add metrics plug-in
+* `FEAT`: add greedy re-schedule on maxTasks fetch
+* `FIX`: consistently pass timings to `poll:done`
+* `FIX`: start tracing poll time on poll start
+
 ## 2.0.0
 
 This is a major rewrite of camunda-worker-node ([`a5d1f275`](https://github.com/nikku/camunda-worker-node/commit/a5d1f27510b79751bb77751216c145a7cd2bc942)).
