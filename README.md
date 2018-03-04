@@ -200,7 +200,7 @@ Workers(engineEndpoint, {
 #### Existing Extensions
 
 * [`Logger`](./lib/logger.js) - adds verbose logging of what is going on
-* [`Backoff`](./lib/backoff.js) - increase polling intervals if the engine endpoint is temporarily unavailable
+* [`Backoff`](./lib/backoff.js) - dynamically adjust poll times based on Camunda REST api availability, fetched tasks and poll processing times
 * [`Metrics`](./lib/metrics.js) - collect and periodically log utilization metrics
 
 

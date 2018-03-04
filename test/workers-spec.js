@@ -3,7 +3,9 @@ var expect = require('chai').expect;
 var extend = require('xtend');
 
 var Workers = require('../');
+
 var Logger = require('../lib/logger');
+var Backoff = require('../lib/backoff');
 
 var EngineApi = require('./engine/api');
 
@@ -52,7 +54,8 @@ describe('workers', function() {
       pollingDelay: 0,
       pollingInterval: 500,
       use: [
-        Logger
+        Logger,
+        Backoff
       ]
     });
   }
