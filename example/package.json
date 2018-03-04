@@ -8,7 +8,7 @@
   "scripts": {
     "support:deploy": "node support/deploy.js",
     "support:start-process": "node support/start-process.js",
-    "start-workers": "DEBUG=orderProcess:* node index.js"
+    "start-workers": "DEBUG=orderProcess:*,workers:metrics node index.js"
   },
   "dependencies": {
     "camunda-worker-node": "file:..",

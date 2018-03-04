@@ -191,7 +191,8 @@ Workers may be extended via the `use` config parameter.
 Workers(engineEndpoint, {
   use: [
     Logger,
-    Backoff
+    Backoff,
+    Metrics
   ]
 });
 ```
@@ -200,6 +201,7 @@ Workers(engineEndpoint, {
 
 * [`Logger`](./lib/logger.js) - adds verbose logging of what is going on
 * [`Backoff`](./lib/backoff.js) - increase polling intervals if the engine endpoint is temporarily unavailable
+* [`Metrics`](./lib/metrics.js) - collect and periodically log utilization metrics
 
 
 ## Dynamically Unregister a Worker

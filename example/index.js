@@ -1,6 +1,7 @@
 var Workers = require('camunda-worker-node');
 
 var Backoff = require('camunda-worker-node/lib/backoff');
+var Metrics = require('camunda-worker-node/lib/metrics');
 
 var engineEndpoint = process.env.ENGINE_URL || 'http://localhost:8080/engine-rest';
 
@@ -14,7 +15,8 @@ var debugCheckout = require('debug')('orderProcess:worker:checkout');
 
 var workers = new Workers(engineEndpoint, {
   use: [
-    Backoff
+    Backoff,
+    Metrics
   ]
 });
 
