@@ -16,7 +16,7 @@ var debugCheckout = require('debug')('orderProcess:worker:checkout');
 var workers = new Workers(engineEndpoint, {
   maxTasks: 10,
   use: [
-    [ Backoff, { maxActiveTasks: 10 } ],
+    [ Backoff, { maxActiveTasks: 100 } ],
     Metrics
   ]
 });
@@ -80,7 +80,7 @@ async function checkout(context) {
 
     await extendLock(5000);
 
-    await delay(Math.trunc(Math.random() * 5));
+    await delay(Math.trunc(Math.random() * 3));
   }
 
   // notify we are done with a new order variable
