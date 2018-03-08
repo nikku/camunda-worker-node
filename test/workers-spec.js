@@ -126,6 +126,19 @@ describe('workers', function() {
     });
 
 
+    it('should re-configure Workers via #configure', function() {
+
+      // given
+      workers = Workers(engineUrl);
+
+      // when
+      workers.configure({ maxTasks: 1000 });
+
+      // then
+      expect(workers.options.maxTasks).to.eql(1000);
+    });
+
+
     describe('should extend via [use]', function() {
 
       it('without options', function() {
