@@ -26,10 +26,10 @@ Deploy the process:
 npm run support:deploy
 ```
 
-Start a process instance:
+Start 1000 process instances:
 
 ```bash
-npm run support:start-process
+npm run support:start-process -- --stream
 ```
 
 Start workers:

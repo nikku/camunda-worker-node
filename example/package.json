@@ -8,7 +8,6 @@
   "scripts": {
     "support:deploy": "node support/deploy.js",
     "support:start-process": "node support/start-process.js",
-    "support:start-process:stream": "while true; do npm run support:start-process; done",
     "start-workers": "DEBUG=orderProcess:*,workers,workers:* node index.js"
   },
   "dependencies": {
