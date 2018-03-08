@@ -74,7 +74,7 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 
 ## Implementing Workers
 
-Implement your workers `async`, promise returning functions or pass results via node-style callbacks.
+Implement your workers via `async`, promise returning functions or pass results via node-style callbacks.
 
 
 ### Workers, Node Style
