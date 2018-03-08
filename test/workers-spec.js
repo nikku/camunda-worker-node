@@ -254,6 +254,7 @@ describe('workers', function() {
           objectVar: {
             name: 'Walter'
           },
+          booleanVar: true,
           dateVar: dateVar
         });
 
@@ -269,6 +270,7 @@ describe('workers', function() {
             objectVar: {
               name: 'Walter'
             },
+            booleanVar: true,
             dateVar: dateVar
           });
 
@@ -386,6 +388,7 @@ describe('workers', function() {
 
         callback(null, {
           variables: {
+            booleanVar: false,
             stringVar: 'BAR',
             nestedObjectVar: nestedObjectVar
           }
@@ -394,15 +397,17 @@ describe('workers', function() {
 
       // (2) promise based worker
       workers.registerWorker('work:B', [
-        'stringVar',
-        'nestedObjectVar'
+        'booleanVar',
+        'nestedObjectVar',
+        'stringVar'
       ], function(context) {
 
         trace.push(log(context));
 
         expect(context.variables).to.eql({
-          stringVar: 'BAR',
-          nestedObjectVar: nestedObjectVar
+          booleanVar: false,
+          nestedObjectVar: nestedObjectVar,
+          stringVar: 'BAR'
         });
 
         return new Promise(function(resolve, reject) {
