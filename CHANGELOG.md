@@ -6,6 +6,10 @@ All notable changes to [camunda-worker-node](https://github.com/nikku/camunda-wo
 
 ___Note:__ Yet to be released changes appear here._
 
+## 4.0.1
+
+* `FIX`: properly serialize boolean variables ([#12](https://github.com/nikku/camunda-worker-node/issues/12))
+
 ## 4.0.0
 
 ### Breaking Changes
