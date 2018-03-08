@@ -60,9 +60,8 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 * Complete tasks with updated variables or fail with errors
 * Trigger [BPMN errors](#trigger-bpmn-errors)
 * [Configure and Extend Task Locks](#task-locks)
-* Configure [logging](#logging) or [authentication](#authentication)
+* Configure [logging](#logging) and [authentication](#authentication)
 * [Extend via plugins](#extend-workers)
-
 
 ## Resources
 
@@ -71,7 +70,12 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 * [Changelog](./CHANGELOG.md)
 
 
-## Workers, Node Style
+## Implementing Workers
+
+Implement your workers `async`, promise returning functions or pass results via node-style callbacks.
+
+
+### Workers, Node Style
 
 Use the provided callback to pass task execution errors and data, node-style:
 
@@ -95,7 +99,7 @@ workers.registerWorker('work:B', function(context, callback) {
 });
 ```
 
-## Workers as async Functions
+### Workers as async Functions
 
 ES6 style async/await to implement workers is fully supported:
 
@@ -116,32 +120,6 @@ workers.registerWorker('work:B', async function(context) {
     }
   };
 });
-```
-
-
-## Authentication
-
-Provide additional request headers to authenticate your task workers via the `requestOptions` configuration:
-
-```javascript
-var workers = Workers(engineEndpoint, {
-  requestOptions: {
-    headers: {
-      Authorization: 'Bearer ...'
-    }
-  }
-})
-```
-
-
-## Logging
-
-We employ [debug](https://www.npmjs.com/package/debug) for logging.
-
-Use the [`Logger` extension](./lib/logger.js) in combination with `DEBUG=*` to capture a full trace of what's going on under the hood:
-
-```bash
-DEBUG=* node start-workers.js
 ```
 
 
@@ -187,6 +165,62 @@ workers.registerWorker('work:B', {
 Read more about external task locking in the [Camunda Documentation](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/).
 
 
+## Authentication
+
+We provide middlewares for basic auth as well as token based authentication.
+
+### Basic Auth
+
+Provide your client credentials via the [`BasicAuth`](./lib/basic-auth.js) middleware:
+
+```javascript
+var workers = Workers(engineEndpoint, {
+  use: [
+    BasicAuth('walt', 'SECRET_PASSWORD')
+  ]
+};
+```
+
+
+### Token Authentication
+
+Provide your tokens via the [`Auth`](./lib/auth.js) middleware:
+
+```javascript
+var workers = Workers(engineEndpoint, {
+  use: [
+    Auth('Bearer', 'BEARER_TOKEN')
+  ]
+};
+```
+
+
+### Custom Made
+
+To support custom authentication options add additional request headers to authenticate your task workers via the `requestOptions` configuration:
+
+```javascript
+var workers = Workers(engineEndpoint, {
+  requestOptions: {
+    headers: {
+      Hello: 'Authenticated?'
+    }
+  }
+})
+```
+
+
+## Logging
+
+We employ [debug](https://www.npmjs.com/package/debug) for logging.
+
+Use the [`Logger` extension](./lib/logger.js) in combination with `DEBUG=*` to capture a full trace of what's going on under the hood:
+
+```bash
+DEBUG=* node start-workers.js
+```
+
+
 ## Extend Workers
 
 Workers may be extended via the `use` config parameter.
@@ -196,7 +230,8 @@ Workers(engineEndpoint, {
   use: [
     Logger,
     Backoff,
-    Metrics
+    Metrics,
+    BasicAuth('Walt', 'SECRET_PASSWORD')
   ]
 });
 ```
@@ -206,6 +241,8 @@ Workers(engineEndpoint, {
 * [`Logger`](./lib/logger.js) - adds verbose logging of what is going on
 * [`Backoff`](./lib/backoff.js) - dynamically adjust poll times based on Camunda REST api availability, fetched tasks and poll processing times
 * [`Metrics`](./lib/metrics.js) - collect and periodically log utilization metrics
+* [`BasicAuth`](./lib/basic-auth.js) - authorize against REST api with username + password
+* [`Auth`](./lib/auth.js) - authorize against REST api with arbitrary tokens
 
 
 ## Dynamically Unregister a Worker
@@ -213,7 +250,7 @@ Workers(engineEndpoint, {
 It is possible to dynamically unregister a worker any time.
 
 ```javascript
-var worker = workers.registerWorker('someTopic', async(context) {
+var worker = workers.registerWorker('someTopic', async function(context) {
   // do work
   console.log('doing work!');
 });
