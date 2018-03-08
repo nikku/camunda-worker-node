@@ -6,6 +6,18 @@ All notable changes to [camunda-worker-node](https://github.com/nikku/camunda-wo
 
 ___Note:__ Yet to be released changes appear here._
 
+## 4.0.0
+
+### Breaking Changes
+
+* `FEAT`: don't wait for task completion between polls (use the [`Backoff`](./lib/backoff.js) extension to temporarily suspend polling if a specified number of `maxActiveTasks` is active) ([#11](https://github.com/nikku/camunda-worker-node/issues/11))
+
+### Other Improvements
+
+* `FEAT`: add [`Auth`](./lib/auth.js) and [`BasicAuth`](./lib/basic-auth.js) middlewares
+* `FEAT`: expose active tasks via metrics
+* `FEAT`: add `Workers#configure` API for dynamic options tuning
+* `DOCS`: considerable documentation improvements
 
 ## 3.0.0
 
