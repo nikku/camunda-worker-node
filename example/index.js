@@ -16,7 +16,7 @@ var debugCheckout = require('debug')('orderProcess:worker:checkout');
 var workers = new Workers(engineEndpoint, {
   maxTasks: 10,
   use: [
-    Backoff,
+    [ Backoff, { maxActiveTasks: 10 } ],
     Metrics
   ]
 });
