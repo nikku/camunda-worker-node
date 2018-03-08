@@ -64,6 +64,7 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 * [Configure Task Fetching](#configure-task-fetching)
 * [Extend via plugins](#extend-workers)
 
+
 ## Resources
 
 * [Example](./example)
