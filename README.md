@@ -61,6 +61,7 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 * Trigger [BPMN errors](#trigger-bpmn-errors)
 * [Configure and Extend Task Locks](#task-locks)
 * Configure [logging](#logging) and [authentication](#authentication)
+* [Configure Task Fetching](#configure-task-fetching)
 * [Extend via plugins](#extend-workers)
 
 ## Resources
@@ -219,6 +220,33 @@ Use the [`Logger` extension](./lib/logger.js) in combination with `DEBUG=*` to c
 ```bash
 DEBUG=* node start-workers.js
 ```
+
+
+## Configure Task Fetching
+
+Task fetching is controlled by two configuration properties:
+
+* `maxTasks` - maximum number of tasks to be fetched and locked with a single poll
+* `pollingInterval` - interval in milliseconds between polls
+
+You may configure both properties on workers creation and at run-time:
+
+```javascript
+var workers = Workers(engineEndpoint, {
+  maxTasks: 2,
+  pollingInterval: 1500
+});
+
+// dynamically increase max tasks
+workers.configure({
+  maxTasks: 5
+});
+```
+
+This way you can control the task fetching behavior both statically and dynamically.
+
+Roll your own middleware to dynamically configure the workers instance or let
+the [`Backoff` middleware](./lib/backoff.js) do the work for you.
 
 
 ## Extend Workers
