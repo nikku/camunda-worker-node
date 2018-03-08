@@ -722,7 +722,7 @@ describe('workers', function() {
   });
 
 
-  describe('typed', function() {
+  describe('variable serialization', function() {
 
     it('should preserve Object serialization', async function() {
 
@@ -805,6 +805,36 @@ describe('workers', function() {
 
       // expect modified existing user
       expect(existingUserVar).to.eql(rawExistingUser);
+    });
+
+  });
+
+
+  describe('polling', function() {
+
+    it('should not fetch tasks if maxTasks === 0', async function() {
+
+      // given
+      workers = createWorkers({
+        pollingDelay: -1,
+        maxTasks: 0
+      });
+
+      workers.registerWorker('topic:A', () => { });
+
+      // protect multi-poll API
+      workers.engineApi.multiPoll = async function() {
+        throw new Error('unexpected call');
+      };
+
+      workers.on('poll:done', function(reason) {
+
+        // then
+        expect(reason).to.eql('no-tasks');
+      });
+
+      // when
+      await workers.poll();
     });
 
   });
