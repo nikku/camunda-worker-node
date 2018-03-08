@@ -92,8 +92,8 @@ describe('backoff', function() {
     ]);
 
     expect(backoffTrace).to.eql([
-      [ 'max tasks fetched', false ],
-      [ 'fetch tasks success', true ]
+      [ 'maxTasks fetched', false ],
+      [ 'less than maxTasks fetched', true ]
     ]);
   });
 
@@ -124,7 +124,7 @@ describe('backoff', function() {
       expect(currentInterval).to.exist;
       expect(reason).to.exist;
 
-      backoffTrace.push([ reason, newInterval ]);
+      backoffTrace.push([ 'pollingInterval', newInterval, reason ]);
     });
 
 
@@ -134,7 +134,7 @@ describe('backoff', function() {
       expect(currentMaxTasks).to.exist;
       expect(reason).to.exist;
 
-      backoffTrace.push([ reason, newMaxTasks ]);
+      backoffTrace.push([ 'maxTasks', newMaxTasks, reason ]);
     });
 
     workers.registerWorker('work:A', async function(context) {
@@ -157,16 +157,16 @@ describe('backoff', function() {
     ]);
 
     expect(backoffTrace).to.eql([
-      [ 'max tasks fetched', 0 ],
-      [ 'task started', 0 ],
-      [ 'max tasks reached', 500 ],
-      [ 'task started', 0 ],
-      [ 'task completed', 2 ],
-      [ 'max tasks fetched', 0 ],
-      [ 'task started', 0 ],
-      [ 'max tasks reached', 500 ],
-      [ 'task started', 0 ],
-      [ 'task completed', 2 ]
+      [ 'pollingInterval', 0, 'maxTasks fetched' ],
+      [ 'maxTasks', 0, 'maxActiveTasks reached' ],
+      [ 'pollingInterval', 500, 'maxActiveTasks reached' ],
+      [ 'maxTasks', 2, 'maxActiveTasks underrun' ],
+      [ 'pollingInterval', 0, 'maxActiveTasks underrun' ],
+      [ 'maxTasks', 0, 'maxActiveTasks reached' ],
+      [ 'pollingInterval', 500, 'maxActiveTasks reached' ],
+      [ 'maxTasks', 2, 'maxActiveTasks underrun' ],
+      [ 'pollingInterval', 0, 'maxActiveTasks underrun' ],
+      [ 'pollingInterval', 500, 'less than maxTasks fetched' ]
     ]);
 
   });
