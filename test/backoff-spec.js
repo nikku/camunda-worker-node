@@ -15,7 +15,7 @@ var {
 describe('backoff', function() {
 
   // slow tests...
-  this.timeout(10000);
+  this.timeout(30000);
 
 
   var engineUrl = 'http://localhost:8080/engine-rest';
