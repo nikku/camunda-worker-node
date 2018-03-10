@@ -16,7 +16,7 @@ describe('auth', function() {
 
     // given
     workers = Workers(engineUrl, {
-      pollingDelay: -1,
+      autoPoll: false,
       use: [
         Auth('Bearer', 'TOKEN')
       ]
@@ -33,7 +33,7 @@ describe('auth', function() {
 
     // given
     workers = Workers(engineUrl, {
-      pollingDelay: -1,
+      autoPoll: false,
       use: [
         Auth('Bearer', 'TOKEN')
       ],

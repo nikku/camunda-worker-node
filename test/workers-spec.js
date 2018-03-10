@@ -53,7 +53,7 @@ describe('workers', function() {
   function createWorkers(options = {}) {
 
     options = Object.assign({
-      pollingDelay: -1,
+      autoPoll: false,
       pollingInterval: 500,
       use: [
         Logger,
@@ -82,7 +82,7 @@ describe('workers', function() {
     it('should re-configure via #configure', function() {
 
       // given
-      workers = Workers(engineUrl);
+      workers = createWorkers();
 
       // when
       workers.configure({ maxTasks: 1000 });
@@ -274,7 +274,7 @@ describe('workers', function() {
       engineApi.startProcessByKey('TestProcess', {});
 
       workers = createWorkers({
-        pollingDelay: 0
+        autoPoll: true
       });
 
       // when
@@ -315,7 +315,7 @@ describe('workers', function() {
         });
 
         workers = createWorkers({
-          pollingDelay: 0
+          autoPoll: true
         });
 
         // when
@@ -349,7 +349,7 @@ describe('workers', function() {
         });
 
         workers = createWorkers({
-          pollingDelay: 0
+          autoPoll: true
         });
 
         // when
@@ -374,7 +374,7 @@ describe('workers', function() {
       var trace = [];
 
       workers = createWorkers({
-        pollingDelay: 0
+        autoPoll: true
       });
 
       workers.registerWorker('work:A', async function(context) {
@@ -430,7 +430,7 @@ describe('workers', function() {
       } = await engineApi.startProcessByKey('TestProcess', startVariables);
 
       workers = createWorkers({
-        pollingDelay: 0
+        autoPoll: true
       });
 
       // when
@@ -527,7 +527,7 @@ describe('workers', function() {
       } = await engineApi.startProcessByKey('TestProcess', startVariables);
 
       workers = createWorkers({
-        pollingDelay: 0,
+        autoPoll: true,
         use: [ Logger ]
       });
 
@@ -602,7 +602,7 @@ describe('workers', function() {
       var pollTrace = [];
 
       workers = createWorkers({
-        pollingDelay: 0
+        autoPoll: true
       });
 
       workers.on('poll', function() {
@@ -634,7 +634,7 @@ describe('workers', function() {
 
         // when
         workers = createWorkers({
-          pollingDelay: 0
+          autoPoll: true
         });
 
         workers.registerWorker('work:A', function(context, callback) {
@@ -660,7 +660,7 @@ describe('workers', function() {
 
         // when
         workers = createWorkers({
-          pollingDelay: 0
+          autoPoll: true
         });
 
         workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
@@ -687,7 +687,7 @@ describe('workers', function() {
         await engineApi.startProcessByKey('TestProcess');
 
         workers = createWorkers({
-          pollingDelay: 0
+          autoPoll: true
         });
 
         // when
@@ -713,7 +713,7 @@ describe('workers', function() {
         await engineApi.startProcessByKey('TestProcess');
 
         workers = createWorkers({
-          pollingDelay: 0
+          autoPoll: true
         });
 
         // when
@@ -741,7 +741,7 @@ describe('workers', function() {
         await engineApi.startProcessByKey('TestProcess');
 
         workers = createWorkers({
-          pollingDelay: 0
+          autoPoll: true
         });
 
         // when
@@ -767,7 +767,7 @@ describe('workers', function() {
         await engineApi.startProcessByKey('TestProcess');
 
         workers = createWorkers({
-          pollingDelay: 0
+          autoPoll: true
         });
 
         // when
@@ -797,7 +797,7 @@ describe('workers', function() {
       } = await engineApi.startProcessByKey('TestProcess');
 
       workers = createWorkers({
-        pollingDelay: 0
+        autoPoll: true
       });
 
       // when
@@ -857,7 +857,7 @@ describe('workers', function() {
       };
 
       workers = createWorkers({
-        pollingDelay: 0
+        autoPoll: true
       });
 
       // when
@@ -917,7 +917,7 @@ describe('workers', function() {
 
       // given
       workers = createWorkers({
-        pollingDelay: -1,
+        autoPoll: false,
         maxTasks: 0
       });
 

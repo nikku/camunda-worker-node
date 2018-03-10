@@ -16,7 +16,7 @@ describe('basic-auth', function() {
 
     // given
     workers = Workers(engineUrl, {
-      pollingDelay: -1,
+      autoPoll: false,
       use: [
         BasicAuth('Walt', 'SECRET_PASSWORD')
       ]
@@ -33,7 +33,7 @@ describe('basic-auth', function() {
 
     // given
     workers = Workers(engineUrl, {
-      pollingDelay: -1,
+      autoPoll: false,
       use: [
         BasicAuth('Walt', 'SECRET_PASSWORD')
       ],

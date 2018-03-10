@@ -58,7 +58,7 @@ describe('backoff', function() {
     var backoffTrace = [];
 
     workers = Workers(engineUrl, {
-      pollingDelay: 0,
+      autoPoll: true,
       pollingInterval: 500,
       use: [
         Backoff,
@@ -110,7 +110,7 @@ describe('backoff', function() {
     var backoffTrace = [];
 
     workers = Workers(engineUrl, {
-      pollingDelay: 0,
+      autoPoll: true,
       pollingInterval: 500,
       use: [
         [ Backoff, { maxActiveTasks: 1 } ],
