@@ -67,6 +67,20 @@ describe('workers', function() {
 
   describe('configuration', function() {
 
+    it('should fail configuring pollingDelay', function() {
+
+      // when
+      function create() {
+        Workers(engineUrl, {
+          pollingDelay: -1
+        });
+      }
+
+      // then
+      expect(create).to.throw;
+    });
+
+
     it('should configure workerId', function() {
 
       // given
@@ -168,6 +182,21 @@ describe('workers', function() {
       // then
       expect(workerDefinition.variables).not.to.exist;
       expect(workerDefinition.lockDuration).to.eql(10000);
+    });
+
+
+    it('should fail registering with lockTime option', function() {
+
+      // given
+      workers = createWorkers();
+
+      // when
+      function register() {
+        workers.registerWorker('worker:Stuff', { lockTime: 1000 }, noop);
+      }
+
+      // then
+      expect(register).to.throw;
     });
 
 
