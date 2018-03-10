@@ -49,84 +49,37 @@ describe('workers', function() {
     }
   });
 
+
   function createWorkers(options = {}) {
 
-    options = extend({
-      pollingDelay: 0,
+    options = Object.assign({
+      pollingDelay: -1,
       pollingInterval: 500,
       use: [
         Logger,
         Backoff
       ]
-    }, options);
+    }, options || {});
 
     return Workers(engineUrl, options);
   }
 
 
-  describe('api', function() {
+  describe('configuration', function() {
 
-    it('should define worker with options', function() {
-
-      // given
-      workers = Workers(engineUrl);
-
-      // when
-      var workerDefinition = workers.registerWorker('worker:Stuff', { lockTime: 3000 }, noop);
-
-      // then
-      expect(workerDefinition.variables).not.to.exist;
-      expect(workerDefinition.remove).to.exist;
-
-      expect(function() {
-        workerDefinition.remove();
-      }).not.to.throw;
-
-    });
-
-
-    it('should define worker with variables', function() {
+    it('should configure workerId', function() {
 
       // given
-      workers = Workers(engineUrl);
-
-      // when
-      var workerDefinition = workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
-
-      // then
-      expect(workerDefinition.variables).to.eql([ 'a', 'b' ]);
-
-      // default lock time is applied
-      expect(workerDefinition.lockTime).to.eql(10000);
-    });
-
-
-    it('should allow single worker per topic name only', function() {
-
-      // given
-      workers = Workers(engineUrl);
-
-      // when
-      workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
-
-      // then
-      expect(function() {
-        workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
-      }).to.throw('worker for <worker:Stuff> already registered');
-    });
-
-
-    it('should configure Workers with workerId', function() {
-
-      // given
-      workers = Workers(engineUrl, { workerId: 'FOO' });
+      workers = createWorkers({
+        workerId: 'FOO'
+      });
 
       // then
       expect(workers.options.workerId).to.eql('FOO');
     });
 
 
-    it('should re-configure Workers via #configure', function() {
+    it('should re-configure via #configure', function() {
 
       // given
       workers = Workers(engineUrl);
@@ -202,6 +155,107 @@ describe('workers', function() {
   });
 
 
+  describe('worker registration', function() {
+
+    it('should register with default options', function() {
+
+      // given
+      workers = createWorkers();
+
+      // when
+      var workerDefinition = workers.registerWorker('worker:Stuff', noop);
+
+      // then
+      expect(workerDefinition.variables).not.to.exist;
+      expect(workerDefinition.lockDuration).to.eql(10000);
+    });
+
+
+    it('should register with global lockDuration', function() {
+
+      // given
+      workers = createWorkers({
+        lockDuration: 3000
+      });
+
+      // when
+      var workerDefinition = workers.registerWorker('worker:Stuff', noop);
+
+      // then
+      expect(workerDefinition.lockDuration).to.eql(3000);
+    });
+
+
+    it('should register with local options', function() {
+
+      // given
+      workers = createWorkers();
+
+      // when
+      var workerDefinition = workers.registerWorker('worker:Stuff', {
+        lockDuration: 3000,
+        variables: [ 'foo' ]
+      }, noop);
+
+      // then
+      expect(workerDefinition.variables).to.eql([ 'foo' ]);
+      expect(workerDefinition.lockDuration).to.eql(3000);
+
+      expect(function() {
+        workerDefinition.remove();
+      }).not.to.throw;
+
+    });
+
+
+    it('should register with variables', function() {
+
+      // given
+      workers = createWorkers();
+
+      // when
+      var workerDefinition = workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
+
+      // then
+      expect(workerDefinition.variables).to.eql([ 'a', 'b' ]);
+      expect(workerDefinition.lockDuration).to.eql(10000);
+    });
+
+
+    it('should allow single worker per topic name only', function() {
+
+      // given
+      workers = createWorkers();
+
+      workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
+
+      // then
+      expect(function() {
+        // when
+        workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
+      }).to.throw('worker for <worker:Stuff> already registered');
+    });
+
+  });
+
+
+  it('should remove worker', function() {
+
+    // given
+    workers = createWorkers();
+
+    // when
+    var workerDefinition = workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
+
+    // then
+    expect(workerDefinition.remove).to.exist;
+
+    expect(function() {
+      workerDefinition.remove();
+    }).not.to.throw;
+  });
+
+
   describe('task execution', function() {
 
     function log(context) {
@@ -219,7 +273,9 @@ describe('workers', function() {
       // given
       engineApi.startProcessByKey('TestProcess', {});
 
-      workers = createWorkers();
+      workers = createWorkers({
+        pollingDelay: 0
+      });
 
       // when
       workers.registerWorker('work:A', async function(context) {
@@ -258,7 +314,9 @@ describe('workers', function() {
           dateVar: dateVar
         });
 
-        workers = createWorkers();
+        workers = createWorkers({
+          pollingDelay: 0
+        });
 
         // when
         workers.registerWorker('work:A', async function(context) {
@@ -290,7 +348,9 @@ describe('workers', function() {
           dateVar: new Date('2010-07-06T10:30:10.000Z')
         });
 
-        workers = createWorkers();
+        workers = createWorkers({
+          pollingDelay: 0
+        });
 
         // when
         workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
@@ -313,7 +373,9 @@ describe('workers', function() {
       // given
       var trace = [];
 
-      workers = createWorkers();
+      workers = createWorkers({
+        pollingDelay: 0
+      });
 
       workers.registerWorker('work:A', async function(context) {
         trace.push('work:A');
@@ -367,7 +429,9 @@ describe('workers', function() {
         id
       } = await engineApi.startProcessByKey('TestProcess', startVariables);
 
-      workers = createWorkers();
+      workers = createWorkers({
+        pollingDelay: 0
+      });
 
       // when
       // (1) callback style worker
@@ -463,6 +527,7 @@ describe('workers', function() {
       } = await engineApi.startProcessByKey('TestProcess', startVariables);
 
       workers = createWorkers({
+        pollingDelay: 0,
         use: [ Logger ]
       });
 
@@ -536,7 +601,9 @@ describe('workers', function() {
       // given
       var pollTrace = [];
 
-      workers = createWorkers();
+      workers = createWorkers({
+        pollingDelay: 0
+      });
 
       workers.on('poll', function() {
         pollTrace.push(true);
@@ -566,7 +633,9 @@ describe('workers', function() {
         engineApi.startProcessByKey('TestProcess', {});
 
         // when
-        workers = createWorkers();
+        workers = createWorkers({
+          pollingDelay: 0
+        });
 
         workers.registerWorker('work:A', function(context, callback) {
 
@@ -590,7 +659,9 @@ describe('workers', function() {
         engineApi.startProcessByKey('TestProcess', {});
 
         // when
-        workers = createWorkers();
+        workers = createWorkers({
+          pollingDelay: 0
+        });
 
         workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
 
@@ -615,7 +686,9 @@ describe('workers', function() {
         // given
         await engineApi.startProcessByKey('TestProcess');
 
-        workers = createWorkers();
+        workers = createWorkers({
+          pollingDelay: 0
+        });
 
         // when
         workers.registerWorker('work:A', function(context, callback) {
@@ -639,7 +712,9 @@ describe('workers', function() {
         // given
         await engineApi.startProcessByKey('TestProcess');
 
-        workers = createWorkers();
+        workers = createWorkers({
+          pollingDelay: 0
+        });
 
         // when
         workers.registerWorker('work:A', function(context) {
@@ -665,7 +740,9 @@ describe('workers', function() {
         // given
         await engineApi.startProcessByKey('TestProcess');
 
-        workers = createWorkers();
+        workers = createWorkers({
+          pollingDelay: 0
+        });
 
         // when
         workers.registerWorker('work:A', async function(context) {
@@ -689,7 +766,9 @@ describe('workers', function() {
         // given
         await engineApi.startProcessByKey('TestProcess');
 
-        workers = createWorkers();
+        workers = createWorkers({
+          pollingDelay: 0
+        });
 
         // when
         workers.registerWorker('work:A', function(context, callback) {
@@ -717,7 +796,9 @@ describe('workers', function() {
         id
       } = await engineApi.startProcessByKey('TestProcess');
 
-      workers = createWorkers();
+      workers = createWorkers({
+        pollingDelay: 0
+      });
 
       // when
       workers.registerWorker('work:A', async function(context) {
@@ -775,7 +856,9 @@ describe('workers', function() {
         }
       };
 
-      workers = Workers(engineUrl);
+      workers = createWorkers({
+        pollingDelay: 0
+      });
 
       // when
       workers.registerWorker('work:A', [ 'existingUser' ], async function(context) {
