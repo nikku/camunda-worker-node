@@ -29,5 +29,10 @@ fetch(engineEndpoint + '/deployment/create', {
     console.log('deployed orderProcess');
   } else {
     console.error('failed to deploy orderProcess (status=%s)', status);
+    process.exit(1);
   }
+}).catch(function(err) {
+  console.error(err);
+
+  process.exit(1);
 });
