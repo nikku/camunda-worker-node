@@ -20,6 +20,18 @@ Upon execution the workers log the work the perform.
 
 ## Usage
 
+If you don't have [Camunda](https://camunda.org/) running already, start it via:
+
+```bash
+npm run support:start-camunda
+```
+
+Stop it later on via
+
+```bash
+npm run support:stop-camunda
+```
+
 Deploy the process:
 
 ```bash

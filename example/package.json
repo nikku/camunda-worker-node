@@ -6,13 +6,20 @@
   "author": "Nico Rehwaldt <git_nikku@nixis.de>",
   "license": "MIT",
   "scripts": {
+    "pre-demo": "run-s support:deploy 'support:start-process -- --stream'",
     "support:deploy": "node support/deploy.js",
     "support:start-process": "node support/start-process.js",
+    "support:start-camunda": "camunda start",
+    "support:stop-camunda": "camunda stop",
     "start-workers": "DEBUG=orderProcess:*,workers,workers:* node index.js"
   },
   "dependencies": {
     "camunda-worker-node": "file:..",
     "debug": "^3.1.0",
     "uuid": "^2.0.1"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.2",
+    "run-camunda": "^1.0.3"
   }
 }
