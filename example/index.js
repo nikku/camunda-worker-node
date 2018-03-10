@@ -16,13 +16,13 @@ var debugCheckout = require('debug')('orderProcess:worker:checkout');
 var workers = new Workers(engineEndpoint, {
   maxTasks: 10,
   use: [
-    [ Backoff, { maxActiveTasks: 100 } ],
+    [ Backoff, { maxActiveTasks: 50 } ],
     Metrics
   ]
 });
 
 
-function shipOrder(context, callback) {
+async function shipOrder(context) {
 
   const {
     variables
@@ -30,10 +30,14 @@ function shipOrder(context, callback) {
 
   var order = variables.order;
 
+  debugShipment('processing order[id=%s]', order.orderId);
+
+  await delay(Math.trunc(Math.random() * 1.5));
+
   if (Math.random() > 0.8) {
     debugShipment('failed to ship order[id=%s]', order.orderId);
 
-    return callback(new Error('failed to process shipment: RANDOM STUFF'));
+    throw new Error('failed to process shipment: RANDOM STUFF');
   }
 
   // do actual work here, write database, provision goods
@@ -43,11 +47,11 @@ function shipOrder(context, callback) {
   debugShipment('shipping order[id=%s] with shipmentId=%s', order.orderId, order.shipmentId);
 
   // notify we are done with an updated order variable
-  callback(null, {
+  return {
     variables: {
       order: order
     }
-  });
+  };
 }
 
 async function checkout(context) {
