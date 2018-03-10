@@ -19,7 +19,7 @@ var {
 describe('workers', function() {
 
   // slow tests...
-  this.timeout(30000);
+  this.timeout(15000);
 
 
   var engineUrl = 'http://localhost:8080/engine-rest';
