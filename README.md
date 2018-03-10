@@ -152,7 +152,7 @@ to increase the lock time while the worker is busy.
 ```javascript
 // configure three seconds as initial lock time
 workers.registerWorker('work:B', {
-  lockTime: 3000,
+  lockDuration: 3000,
   variables: [ 'a' ]
 }, async function(context) {
 
