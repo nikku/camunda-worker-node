@@ -1,5 +1,7 @@
 # camunda-worker-node
 
+[![Build Status](https://travis-ci.org/nikku/camunda-worker-node.svg?branch=master)](https://travis-ci.org/nikku/camunda-worker-node)
+
 Implement your [external task workers](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/) for [Camunda](http://camunda.org) in [NodeJS](https://nodejs.org/).
 
 > Compatible with Camunda `>= 7.8`. Requires NodeJS `>= 6.0`.
