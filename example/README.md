@@ -10,10 +10,10 @@ The following process is the basis of this example:
 
 It defines two external tasks, `orderProcess:checkout` and `orderProcess:shipment`.
 
-The script [`index.js`](./index.js) bootstraps [camunda-worker-node](https://github.com/nikku/camunda-worker-node) and hooks in the (external) implementation for both.
+The script [`index.js`](./index.js) bootstraps [camunda-worker-node](https://github.com/nikku/camunda-worker-node) and hooks in the (external) implementation for both tasks.
 
 
-Upon execution the workers log the work the perform.
+Upon execution the workers log the work they perform.
 
 ![Work log](./log.png)
 
