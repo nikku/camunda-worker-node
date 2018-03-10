@@ -239,20 +239,24 @@ describe('workers', function() {
   });
 
 
-  it('should remove worker', function() {
+  describe('worker removal', function() {
 
-    // given
-    workers = createWorkers();
+    it('should remove worker', function() {
 
-    // when
-    var workerDefinition = workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
+      // given
+      workers = createWorkers();
 
-    // then
-    expect(workerDefinition.remove).to.exist;
+      // when
+      var workerDefinition = workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
 
-    expect(function() {
-      workerDefinition.remove();
-    }).not.to.throw;
+      // then
+      expect(workerDefinition.remove).to.exist;
+
+      expect(function() {
+        workerDefinition.remove();
+      }).not.to.throw;
+    });
+
   });
 
 
