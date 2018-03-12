@@ -77,7 +77,7 @@ This is a major rewrite of camunda-worker-node ([`a5d1f275`](https://github.com/
 
 ## 0.7.0
 
-* `FEAT`: allow task completion with [BPMN error](https://docs.camunda.org/manual/7.8/reference/rest/external-task/post-bpmn-error/) ([`9a7fff9a`](https://github.com/nikku/camunda-worker-node/commit/9a7fff9a801454890726fa94c8e9f70210bcae17))
+* `FEAT`: allow task completion with [BPMN error](https://docs.camunda.org/manual/7.8/reference/rest/external-task/post-bpmn-error/) ([`9a7fff9a`](https://github.com/nikku/camunda-worker-node/commit/114b1400648855058afd95ee0c47a4d2044b3477))
 * `DOCS`: add various documentation improvements
 
 ## 0.6.0
