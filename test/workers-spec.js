@@ -35,7 +35,7 @@ describe('workers', function() {
 
   afterEach(async function() {
     if (workers) {
-      await workers.shutdown();
+      await workers.stop();
 
       workers = null;
     }
@@ -969,6 +969,89 @@ describe('workers', function() {
 
       // when
       await workers.poll();
+    });
+
+  });
+
+
+  describe('life-cycle', function() {
+
+    it('should start/stop manually', async function() {
+
+      var pollTrace = [];
+
+      // when
+      // create with autoPoll=false
+      workers = createWorkers({
+        autoPoll: false
+      });
+
+      workers.poll = function() {
+        pollTrace.push('POLL');
+
+        return Promise.resolve();
+      };
+
+      await delay(.5);
+
+      // then
+      expect(pollTrace).to.be.empty;
+
+      // when
+      // starting workers instance
+      workers.start();
+
+      await delay(.5);
+
+      // then
+      expect(pollTrace).to.have.length(1);
+
+      // when
+      // stopping workers instance
+      workers.stop();
+
+      // ...should be indempotent
+      workers.stop();
+
+
+      await delay(.5);
+
+      // then
+      expect(pollTrace).to.have.length(1);
+
+      // when
+      // re-starting workers instance
+      workers.start();
+
+      // ...should be indempotent
+      workers.start();
+
+      await delay(.5);
+
+      // then
+      // only one additional poll got scheduled
+      expect(pollTrace).to.have.length(2);
+    });
+
+
+    it('should throw on #shutdown', async function() {
+
+      // given
+      workers = createWorkers({
+        autoPoll: false
+      });
+
+      let err;
+
+      // when
+      try {
+        await workers.shutdown();
+      } catch (e) {
+        err = e;
+      }
+
+      // then
+      expect(err).to.exist;
     });
 
   });

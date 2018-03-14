@@ -31,7 +31,7 @@ describe('backoff', function() {
 
   afterEach(async function() {
     if (workers) {
-      await workers.shutdown();
+      await workers.stop();
 
       workers = null;
     }
@@ -82,7 +82,7 @@ describe('backoff', function() {
 
     await delay(1);
 
-    await workers.shutdown();
+    await workers.stop();
 
     // then
     expect(trace).to.eql([
@@ -146,7 +146,7 @@ describe('backoff', function() {
 
     await delay(4);
 
-    await workers.shutdown();
+    await workers.stop();
 
     // then
     expect(trace).to.eql([

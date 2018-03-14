@@ -42,8 +42,8 @@ workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
   };
 });
 
-// shutdown the workers instance with the application
-workers.shutdown();
+// stop the workers instance with the application
+workers.stop();
 ```
 
 Make sure you properly configured the [external tasks](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/) in your BPMN 2.0 diagram:
