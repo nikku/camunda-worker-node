@@ -6,13 +6,18 @@ All notable changes to [camunda-worker-node](https://github.com/nikku/camunda-wo
 
 ___Note:__ Yet to be released changes appear here._
 
+## 6.0.0
+
+### Breaking Changes
+
+* `FEAT`: rename `shutdown` to `stop` in API _and_ events
+
 ## 5.0.0
 
 ### Breaking Changes
 
 * `FEAT`: replace `pollingDelay` option with `autoPoll=(true|false)` ([`3e444c00`](https://github.com/nikku/camunda-worker-node/commit/3e444c00444c7f40074fb9fff1384a872650cdab))
 * `FEAT`: rename `lockTime` option to `lockDuration` to match Camunda wording ([`9f4765ca`](https://github.com/nikku/camunda-worker-node/commit/9f4765ca9b352719e339eda59a307b721915bcf2))
-
 
 ## 4.0.1
 
