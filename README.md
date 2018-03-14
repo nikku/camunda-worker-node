@@ -61,9 +61,10 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 * Implement workers [node-style](#workers-node-style) or via [`async` functions](#workers-as-async-functions)
 * Complete tasks with updated variables or fail with errors
 * Trigger [BPMN errors](#trigger-bpmn-errors)
-* [Configure and Extend Task Locks](#task-locks)
+* [Configure and extend task locks](#task-locks)
 * Configure [logging](#logging) and [authentication](#authentication)
-* [Configure Task Fetching](#configure-task-fetching)
+* [Configure task fetching](#task-fetching)
+* [Control the workers life-cycle](#workers-life-cycle)
 * [Extend via plugins](#extend-workers)
 
 
@@ -225,7 +226,7 @@ DEBUG=* node start-workers.js
 ```
 
 
-## Configure Task Fetching
+## Task Fetching
 
 Task fetching is controlled by two configuration properties:
 
@@ -246,10 +247,35 @@ workers.configure({
 });
 ```
 
-This way you can control the task fetching behavior both statically and dynamically.
+This way you can configure the task fetching behavior both statically and dynamically.
 
 Roll your own middleware to dynamically configure the workers instance or let
 the [`Backoff` middleware](./lib/backoff.js) do the work for you.
+
+As an alternative to configuring these values you may [stop and re-start](#control-life-cycle)
+the Workers instance as needed, too.
+
+
+## Workers Life-Cycle
+
+Per default the workers instance will start to poll for work immediately.
+Configure this behavior via the `autoPoll` option and start, stop and re-start
+the instance programatically if you need to:
+
+```javascript
+var workers = Workers(engineEndpoint, {
+  autoPoll: false
+});
+
+// manually start polling
+workers.start();
+
+// stop later on
+await workers.stop();
+
+// re-start at some point in time
+workers.start();
+```
 
 
 ## Extend Workers
