@@ -315,6 +315,11 @@ DEBUG=worker* npm run all
 __Note:__ You need a Camunda BPM REST API exposed on `localhost:8080/engine-rest` for the tests to pass. An easy way to get it up running is [via Docker](https://github.com/camunda/docker-camunda-bpm-platform#get-started).
 
 
+## Related
+
+* [External task documentation](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/)
+* [Official external task client](https://github.com/camunda/camunda-external-task-client-js)
+
 ## License
 
 MIT
