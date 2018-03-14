@@ -10,7 +10,12 @@ ___Note:__ Yet to be released changes appear here._
 
 ### Breaking Changes
 
-* `FEAT`: rename `shutdown` to `stop` in API _and_ events
+* `FEAT`: rename `shutdown` to `stop` in API _and_ events ([`a4cce328`](https://github.com/nikku/camunda-worker-node/commit/a4cce3286fa404b3e6bcd6cafe9bc5883f6b96d4))
+
+### Other Improvements
+
+* `DOCS`: document workers life-cycle
+* `DOCS`: feature related projects
 
 ## 5.0.0
 
