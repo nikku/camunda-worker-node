@@ -8,7 +8,7 @@ ___Note:__ Yet to be released changes appear here._
 
 ## 7.0.0
 
-* `CHORE`: deprecated `Worker#registerWorker` in favor of `Worker#subscribe` ([`412ea017`](https://github.com/nikku/camunda-worker-node/commit/412ea01751257bdb350447b26338ba4ad97fdb68))
+* `CHORE`: deprecate `Worker#registerWorker` in favor of `Worker#subscribe` ([`412ea017`](https://github.com/nikku/camunda-worker-node/commit/412ea01751257bdb350447b26338ba4ad97fdb68))
 
 ## 6.0.0
 
