@@ -1,4 +1,4 @@
-var Workers = require('camunda-worker-node');
+var Worker = require('camunda-worker-node');
 
 var Backoff = require('camunda-worker-node/lib/backoff');
 var Metrics = require('camunda-worker-node/lib/metrics');
@@ -8,12 +8,12 @@ var engineEndpoint = process.env.ENGINE_URL || 'http://localhost:8080/engine-res
 var uuid = require('uuid');
 
 
-var debugWorkers = require('debug')('orderProcess:workers');
+var debugWorker = require('debug')('orderProcess:worker');
 
 var debugShipment = require('debug')('orderProcess:worker:shipment');
 var debugCheckout = require('debug')('orderProcess:worker:checkout');
 
-var workers = new Workers(engineEndpoint, {
+var worker = new Worker(engineEndpoint, {
   maxTasks: 10,
   use: [
     [ Backoff, { maxActiveTasks: 50 } ],
@@ -95,22 +95,22 @@ async function checkout(context) {
   };
 }
 
-workers.registerWorker('orderProcess:shipment', [ 'order' ], shipOrder);
+worker.subscribe('orderProcess:shipment', [ 'order' ], shipOrder);
 
-workers.registerWorker('orderProcess:checkout', [ 'goods' ], checkout);
+worker.subscribe('orderProcess:checkout', [ 'goods' ], checkout);
 
 
-workers.on('start', function() {
-  debugWorkers('starting');
+worker.on('start', function() {
+  debugWorker('starting');
 });
 
-workers.on('poll', function() {
-  debugWorkers('polling');
+worker.on('poll', function() {
+  debugWorker('polling');
 });
 
 // handle worker errors
-workers.on('error', function(err) {
-  debugWorkers('error: %s', err);
+worker.on('error', function(err) {
+  debugWorker('error: %s', err);
 });
 
 

@@ -1,6 +1,6 @@
 var expect = require('chai').expect;
 
-var Workers = require('../');
+var Worker = require('../');
 
 var BasicAuth = require('../lib/basic-auth');
 
@@ -9,13 +9,13 @@ describe('basic-auth', function() {
 
   var engineUrl = 'http://localhost:8080/engine-rest';
 
-  var workers;
+  var worker;
 
 
   it('should add requestOptions + Authorization header', function() {
 
     // given
-    workers = Workers(engineUrl, {
+    worker = Worker(engineUrl, {
       autoPoll: false,
       use: [
         BasicAuth('Walt', 'SECRET_PASSWORD')
@@ -23,7 +23,7 @@ describe('basic-auth', function() {
     });
 
     // then
-    expect(workers.options.requestOptions.headers).to.include({
+    expect(worker.options.requestOptions.headers).to.include({
       Authorization: 'Basic V2FsdDpTRUNSRVRfUEFTU1dPUkQ='
     });
   });
@@ -32,7 +32,7 @@ describe('basic-auth', function() {
   it('should merge in Authorization header', function() {
 
     // given
-    workers = Workers(engineUrl, {
+    worker = Worker(engineUrl, {
       autoPoll: false,
       use: [
         BasicAuth('Walt', 'SECRET_PASSWORD')
@@ -43,11 +43,11 @@ describe('basic-auth', function() {
     });
 
     // then
-    expect(workers.options.requestOptions.headers).to.include({
+    expect(worker.options.requestOptions.headers).to.include({
       Authorization: 'Basic V2FsdDpTRUNSRVRfUEFTU1dPUkQ='
     });
 
-    expect(workers.options.requestOptions).to.include({
+    expect(worker.options.requestOptions).to.include({
       foo: 'BAR'
     });
   });

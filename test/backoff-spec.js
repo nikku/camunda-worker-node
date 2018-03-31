@@ -1,6 +1,6 @@
 var expect = require('chai').expect;
 
-var Workers = require('../');
+var Worker = require('../');
 
 var Logger = require('../lib/logger');
 var Backoff = require('../lib/backoff');
@@ -23,17 +23,17 @@ describe('backoff', function() {
   var engineApi = new EngineApi(engineUrl);
 
 
-  var workers, deployment;
+  var worker, deployment;
 
   beforeEach(async function() {
     deployment = await engineApi.deploy(__dirname + '/process.bpmn');
   });
 
   afterEach(async function() {
-    if (workers) {
-      await workers.stop();
+    if (worker) {
+      await worker.stop();
 
-      workers = null;
+      worker = null;
     }
 
     if (deployment) {
@@ -57,7 +57,7 @@ describe('backoff', function() {
 
     var backoffTrace = [];
 
-    workers = Workers(engineUrl, {
+    worker = Worker(engineUrl, {
       autoPoll: true,
       pollingInterval: 500,
       use: [
@@ -66,7 +66,7 @@ describe('backoff', function() {
       ]
     });
 
-    workers.on('backoff:updatePollingInterval', function(newInterval, currentInterval, reason) {
+    worker.on('backoff:updatePollingInterval', function(newInterval, currentInterval, reason) {
 
       expect(newInterval).to.exist;
       expect(currentInterval).to.exist;
@@ -75,14 +75,14 @@ describe('backoff', function() {
       backoffTrace.push([ reason, newInterval > currentInterval ]);
     });
 
-    workers.registerWorker('work:A', async function(context) {
+    worker.subscribe('work:A', async function(context) {
       // when
       trace.push('work:A');
     });
 
     await delay(1);
 
-    await workers.stop();
+    await worker.stop();
 
     // then
     expect(trace).to.eql([
@@ -109,7 +109,7 @@ describe('backoff', function() {
 
     var backoffTrace = [];
 
-    workers = Workers(engineUrl, {
+    worker = Worker(engineUrl, {
       autoPoll: true,
       pollingInterval: 500,
       use: [
@@ -118,7 +118,7 @@ describe('backoff', function() {
       ]
     });
 
-    workers.on('backoff:updatePollingInterval', function(newInterval, currentInterval, reason) {
+    worker.on('backoff:updatePollingInterval', function(newInterval, currentInterval, reason) {
 
       expect(newInterval).to.exist;
       expect(currentInterval).to.exist;
@@ -128,7 +128,7 @@ describe('backoff', function() {
     });
 
 
-    workers.on('backoff:updateMaxTasks', function(newMaxTasks, currentMaxTasks, reason) {
+    worker.on('backoff:updateMaxTasks', function(newMaxTasks, currentMaxTasks, reason) {
 
       expect(newMaxTasks).to.exist;
       expect(currentMaxTasks).to.exist;
@@ -137,7 +137,7 @@ describe('backoff', function() {
       backoffTrace.push([ 'maxTasks', newMaxTasks, reason ]);
     });
 
-    workers.registerWorker('work:A', async function(context) {
+    worker.subscribe('work:A', async function(context) {
       // when
       trace.push('work:A');
 
@@ -146,7 +146,7 @@ describe('backoff', function() {
 
     await delay(4);
 
-    await workers.stop();
+    await worker.stop();
 
     // then
     expect(trace).to.eql([

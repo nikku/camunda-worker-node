@@ -2,21 +2,21 @@ var expect = require('chai').expect;
 
 var extend = require('xtend');
 
-var Workers = require('../');
+var Worker = require('../');
 
 var Logger = require('../lib/logger');
 var Backoff = require('../lib/backoff');
 
 var EngineApi = require('./engine/api');
 
-var debug = require('debug')('workers-spec');
+var debug = require('debug')('worker-spec');
 
 var {
   delay
 } = require('./helper');
 
 
-describe('workers', function() {
+describe('worker', function() {
 
   // slow tests...
   this.timeout(15000);
@@ -27,17 +27,17 @@ describe('workers', function() {
   var engineApi = new EngineApi(engineUrl);
 
 
-  var workers, deployment;
+  var worker, deployment;
 
   beforeEach(async function() {
     deployment = await engineApi.deploy(__dirname + '/process.bpmn');
   });
 
   afterEach(async function() {
-    if (workers) {
-      await workers.stop();
+    if (worker) {
+      await worker.stop();
 
-      workers = null;
+      worker = null;
     }
 
     if (deployment) {
@@ -50,7 +50,7 @@ describe('workers', function() {
   });
 
 
-  function createWorkers(options = {}) {
+  function createWorker(options = {}) {
 
     options = Object.assign({
       autoPoll: false,
@@ -61,7 +61,7 @@ describe('workers', function() {
       ]
     }, options || {});
 
-    return Workers(engineUrl, options);
+    return Worker(engineUrl, options);
   }
 
 
@@ -71,7 +71,7 @@ describe('workers', function() {
 
       // when
       function create() {
-        Workers(engineUrl, {
+        Worker(engineUrl, {
           pollingDelay: -1
         });
       }
@@ -84,25 +84,25 @@ describe('workers', function() {
     it('should configure workerId', function() {
 
       // given
-      workers = createWorkers({
+      worker = createWorker({
         workerId: 'FOO'
       });
 
       // then
-      expect(workers.options.workerId).to.eql('FOO');
+      expect(worker.options.workerId).to.eql('FOO');
     });
 
 
     it('should re-configure via #configure', function() {
 
       // given
-      workers = createWorkers();
+      worker = createWorker();
 
       // when
-      workers.configure({ maxTasks: 1000 });
+      worker.configure({ maxTasks: 1000 });
 
       // then
-      expect(workers.options.maxTasks).to.eql(1000);
+      expect(worker.options.maxTasks).to.eql(1000);
     });
 
 
@@ -113,17 +113,17 @@ describe('workers', function() {
         // given
         var called;
 
-        function Extension(workers, opts) {
-          called = [ workers, opts ];
+        function Extension(worker, opts) {
+          called = [ worker, opts ];
         }
 
         // when
-        workers = Workers(engineUrl, {
+        worker = Worker(engineUrl, {
           use: [ Extension ]
         });
 
         // then
-        expect(called).to.eql([ workers, {} ]);
+        expect(called).to.eql([ worker, {} ]);
       });
 
 
@@ -132,12 +132,12 @@ describe('workers', function() {
         // given
         var called;
 
-        function Extension(workers, opts) {
-          called = [ workers, opts ];
+        function Extension(worker, opts) {
+          called = [ worker, opts ];
         }
 
         // when
-        workers = Workers(engineUrl, {
+        worker = Worker(engineUrl, {
           use: [
             [ Extension, { foo: 'BAR' } ]
           ]
@@ -145,7 +145,7 @@ describe('workers', function() {
 
         // then
         expect(called).to.eql([
-          workers,
+          worker,
           { foo: 'BAR' }
         ]);
       });
@@ -155,7 +155,7 @@ describe('workers', function() {
 
         // when
         expect(function() {
-          Workers(engineUrl, {
+          Worker(engineUrl, {
             use: [
               { foo: 'BAR' }
             ]
@@ -169,15 +169,15 @@ describe('workers', function() {
   });
 
 
-  describe('worker registration', function() {
+  describe('work subscription', function() {
 
-    it('should register with default options', function() {
+    it('should subscribe with default options', function() {
 
       // given
-      workers = createWorkers();
+      worker = createWorker();
 
       // when
-      var workerDefinition = workers.registerWorker('worker:Stuff', noop);
+      var workerDefinition = worker.subscribe('worker:Stuff', noop);
 
       // then
       expect(workerDefinition.variables).not.to.exist;
@@ -185,43 +185,43 @@ describe('workers', function() {
     });
 
 
-    it('should fail registering with lockTime option', function() {
+    it('should fail subscribeing with lockTime option', function() {
 
       // given
-      workers = createWorkers();
+      worker = createWorker();
 
       // when
-      function register() {
-        workers.registerWorker('worker:Stuff', { lockTime: 1000 }, noop);
+      function subscribe() {
+        worker.subscribe('worker:Stuff', { lockTime: 1000 }, noop);
       }
 
       // then
-      expect(register).to.throw;
+      expect(subscribe).to.throw;
     });
 
 
-    it('should register with global lockDuration', function() {
+    it('should subscribe with global lockDuration', function() {
 
       // given
-      workers = createWorkers({
+      worker = createWorker({
         lockDuration: 3000
       });
 
       // when
-      var workerDefinition = workers.registerWorker('worker:Stuff', noop);
+      var workerDefinition = worker.subscribe('worker:Stuff', noop);
 
       // then
       expect(workerDefinition.lockDuration).to.eql(3000);
     });
 
 
-    it('should register with local options', function() {
+    it('should subscribe with local options', function() {
 
       // given
-      workers = createWorkers();
+      worker = createWorker();
 
       // when
-      var workerDefinition = workers.registerWorker('worker:Stuff', {
+      var workerDefinition = worker.subscribe('worker:Stuff', {
         lockDuration: 3000,
         variables: [ 'foo' ]
       }, noop);
@@ -237,13 +237,13 @@ describe('workers', function() {
     });
 
 
-    it('should register with variables', function() {
+    it('should subscribe with variables', function() {
 
       // given
-      workers = createWorkers();
+      worker = createWorker();
 
       // when
-      var workerDefinition = workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
+      var workerDefinition = worker.subscribe('worker:Stuff', [ 'a', 'b' ], noop);
 
       // then
       expect(workerDefinition.variables).to.eql([ 'a', 'b' ]);
@@ -254,15 +254,30 @@ describe('workers', function() {
     it('should allow single worker per topic name only', function() {
 
       // given
-      workers = createWorkers();
+      worker = createWorker();
 
-      workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
+      worker.subscribe('worker:Stuff', [ 'a', 'b' ], noop);
 
       // then
       expect(function() {
         // when
-        workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
-      }).to.throw('worker for <worker:Stuff> already registered');
+        worker.subscribe('worker:Stuff', [ 'a', 'b' ], noop);
+      }).to.throw('subscription for <worker:Stuff> already registered');
+    });
+
+
+    it('should subscribe via legacy API', function() {
+
+      // given
+      worker = createWorker();
+
+      // when
+      // calling
+      var workerDefinition = worker.registerWorker('worker:Stuff', noop);
+
+      // then
+      expect(workerDefinition.variables).not.to.exist;
+      expect(workerDefinition.lockDuration).to.eql(10000);
     });
 
   });
@@ -273,10 +288,10 @@ describe('workers', function() {
     it('should remove worker', function() {
 
       // given
-      workers = createWorkers();
+      worker = createWorker();
 
       // when
-      var workerDefinition = workers.registerWorker('worker:Stuff', [ 'a', 'b' ], noop);
+      var workerDefinition = worker.subscribe('worker:Stuff', [ 'a', 'b' ], noop);
 
       // then
       expect(workerDefinition.remove).to.exist;
@@ -306,16 +321,16 @@ describe('workers', function() {
       // given
       engineApi.startProcessByKey('TestProcess', {});
 
-      workers = createWorkers({
+      worker = createWorker({
         autoPoll: true
       });
 
       // when
-      workers.registerWorker('work:A', async function(context) {
+      worker.subscribe('work:A', async function(context) {
 
         // then
         expect(context.topicName).to.eql('work:A');
-        expect(context.workerId).to.eql(workers.options.workerId);
+        expect(context.workerId).to.eql(worker.options.workerId);
 
         expect(context.id).to.exist;
         expect(context.lockExpirationTime).to.exist;
@@ -347,12 +362,12 @@ describe('workers', function() {
           dateVar: dateVar
         });
 
-        workers = createWorkers({
+        worker = createWorker({
           autoPoll: true
         });
 
         // when
-        workers.registerWorker('work:A', async function(context) {
+        worker.subscribe('work:A', async function(context) {
 
           // then
           // fetching all variables
@@ -381,12 +396,12 @@ describe('workers', function() {
           dateVar: new Date('2010-07-06T10:30:10.000Z')
         });
 
-        workers = createWorkers({
+        worker = createWorker({
           autoPoll: true
         });
 
         // when
-        workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
+        worker.subscribe('work:A', [ 'numberVar' ], async function(context) {
 
           // then
           // fetching all variables
@@ -406,11 +421,11 @@ describe('workers', function() {
       // given
       var trace = [];
 
-      workers = createWorkers({
+      worker = createWorker({
         autoPoll: true
       });
 
-      workers.registerWorker('work:A', async function(context) {
+      worker.subscribe('work:A', async function(context) {
         trace.push('work:A');
       });
 
@@ -462,13 +477,13 @@ describe('workers', function() {
         id
       } = await engineApi.startProcessByKey('TestProcess', startVariables);
 
-      workers = createWorkers({
+      worker = createWorker({
         autoPoll: true
       });
 
       // when
       // (1) callback style worker
-      workers.registerWorker('work:A', [
+      worker.subscribe('work:A', [
         'numberVar',
         'objectVar',
         'dateVar',
@@ -493,7 +508,7 @@ describe('workers', function() {
       });
 
       // (2) promise based worker
-      workers.registerWorker('work:B', [
+      worker.subscribe('work:B', [
         'booleanVar',
         'nestedObjectVar',
         'stringVar'
@@ -559,14 +574,14 @@ describe('workers', function() {
         id
       } = await engineApi.startProcessByKey('TestProcess', startVariables);
 
-      workers = createWorkers({
+      worker = createWorker({
         autoPoll: true,
         use: [ Logger ]
       });
 
       // when
       // (1) callback style worker
-      workers.registerWorker('work:A', [
+      worker.subscribe('work:A', [
         'numberVar',
         'objectVar',
         'dateVar',
@@ -590,7 +605,7 @@ describe('workers', function() {
       });
 
       // (2) promise based worker
-      workers.registerWorker('work:B', [
+      worker.subscribe('work:B', [
         'stringVar',
         'nestedObjectVar'
       ], function(context) {
@@ -634,15 +649,15 @@ describe('workers', function() {
       // given
       var pollTrace = [];
 
-      workers = createWorkers({
+      worker = createWorker({
         autoPoll: true
       });
 
-      workers.on('poll', function() {
+      worker.on('poll', function() {
         pollTrace.push(true);
       });
 
-      workers.registerWorker('work:A', async function(context) {
+      worker.subscribe('work:A', async function(context) {
         pollTrace.push('work:A');
 
         await delay(2);
@@ -666,11 +681,11 @@ describe('workers', function() {
         engineApi.startProcessByKey('TestProcess', {});
 
         // when
-        workers = createWorkers({
+        worker = createWorker({
           autoPoll: true
         });
 
-        workers.registerWorker('work:A', function(context, callback) {
+        worker.subscribe('work:A', function(context, callback) {
 
           // then
           var extendLock = context.extendLock;
@@ -692,11 +707,11 @@ describe('workers', function() {
         engineApi.startProcessByKey('TestProcess', {});
 
         // when
-        workers = createWorkers({
+        worker = createWorker({
           autoPoll: true
         });
 
-        workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
+        worker.subscribe('work:A', [ 'numberVar' ], async function(context) {
 
           // then
           var extendLock = context.extendLock;
@@ -719,19 +734,19 @@ describe('workers', function() {
         // given
         await engineApi.startProcessByKey('TestProcess');
 
-        workers = createWorkers({
+        worker = createWorker({
           autoPoll: true
         });
 
         // when
-        workers.registerWorker('work:A', function(context, callback) {
+        worker.subscribe('work:A', function(context, callback) {
           callback(new Error('could not execute'));
         });
 
         await delay(1);
 
         // then
-        var workerId = workers.options.workerId;
+        var workerId = worker.options.workerId;
 
         const log = await engineApi.getWorkerLog(workerId);
 
@@ -745,12 +760,12 @@ describe('workers', function() {
         // given
         await engineApi.startProcessByKey('TestProcess');
 
-        workers = createWorkers({
+        worker = createWorker({
           autoPoll: true
         });
 
         // when
-        workers.registerWorker('work:A', function(context) {
+        worker.subscribe('work:A', function(context) {
           return Promise.reject(
             new Error('could not execute')
           );
@@ -759,7 +774,7 @@ describe('workers', function() {
         await delay(1);
 
         // then
-        var workerId = workers.options.workerId;
+        var workerId = worker.options.workerId;
 
         const log = await engineApi.getWorkerLog(workerId);
 
@@ -773,19 +788,19 @@ describe('workers', function() {
         // given
         await engineApi.startProcessByKey('TestProcess');
 
-        workers = createWorkers({
+        worker = createWorker({
           autoPoll: true
         });
 
         // when
-        workers.registerWorker('work:A', async function(context) {
+        worker.subscribe('work:A', async function(context) {
           throw new Error('could not execute');
         });
 
         await delay(1);
 
         // then
-        var workerId = workers.options.workerId;
+        var workerId = worker.options.workerId;
 
         const log = await engineApi.getWorkerLog(workerId);
 
@@ -799,19 +814,19 @@ describe('workers', function() {
         // given
         await engineApi.startProcessByKey('TestProcess');
 
-        workers = createWorkers({
+        worker = createWorker({
           autoPoll: true
         });
 
         // when
-        workers.registerWorker('work:A', function(context, callback) {
+        worker.subscribe('work:A', function(context, callback) {
           throw new Error('could not execute');
         });
 
         await delay(1);
 
         // then
-        var workerId = workers.options.workerId;
+        var workerId = worker.options.workerId;
 
         const log = await engineApi.getWorkerLog(workerId);
 
@@ -829,12 +844,12 @@ describe('workers', function() {
         id
       } = await engineApi.startProcessByKey('TestProcess');
 
-      workers = createWorkers({
+      worker = createWorker({
         autoPoll: true
       });
 
       // when
-      workers.registerWorker('work:A', async function(context) {
+      worker.subscribe('work:A', async function(context) {
         return {
           errorCode: 'some-error'
         };
@@ -889,12 +904,12 @@ describe('workers', function() {
         }
       };
 
-      workers = createWorkers({
+      worker = createWorker({
         autoPoll: true
       });
 
       // when
-      workers.registerWorker('work:A', [ 'existingUser' ], async function(context) {
+      worker.subscribe('work:A', [ 'existingUser' ], async function(context) {
 
         var existingUser = context.variables.existingUser;
 
@@ -949,26 +964,26 @@ describe('workers', function() {
     it('should not fetch tasks if maxTasks === 0', async function() {
 
       // given
-      workers = createWorkers({
+      worker = createWorker({
         autoPoll: false,
         maxTasks: 0
       });
 
-      workers.registerWorker('topic:A', () => { });
+      worker.subscribe('topic:A', () => { });
 
       // protect multi-poll API
-      workers.engineApi.multiPoll = async function() {
+      worker.engineApi.multiPoll = async function() {
         throw new Error('unexpected call');
       };
 
-      workers.on('poll:done', function(reason) {
+      worker.on('poll:done', function(reason) {
 
         // then
         expect(reason).to.eql('no-tasks');
       });
 
       // when
-      await workers.poll();
+      await worker.poll();
     });
 
   });
@@ -982,11 +997,11 @@ describe('workers', function() {
 
       // when
       // create with autoPoll=false
-      workers = createWorkers({
+      worker = createWorker({
         autoPoll: false
       });
 
-      workers.poll = function() {
+      worker.poll = function() {
         pollTrace.push('POLL');
 
         return Promise.resolve();
@@ -998,8 +1013,8 @@ describe('workers', function() {
       expect(pollTrace).to.be.empty;
 
       // when
-      // starting workers instance
-      workers.start();
+      // starting worker instance
+      worker.start();
 
       await delay(.5);
 
@@ -1007,11 +1022,11 @@ describe('workers', function() {
       expect(pollTrace).to.have.length(1);
 
       // when
-      // stopping workers instance
-      workers.stop();
+      // stopping worker instance
+      worker.stop();
 
       // ...should be indempotent
-      workers.stop();
+      worker.stop();
 
 
       await delay(.5);
@@ -1020,11 +1035,11 @@ describe('workers', function() {
       expect(pollTrace).to.have.length(1);
 
       // when
-      // re-starting workers instance
-      workers.start();
+      // re-starting worker instance
+      worker.start();
 
       // ...should be indempotent
-      workers.start();
+      worker.start();
 
       await delay(.5);
 
@@ -1037,7 +1052,7 @@ describe('workers', function() {
     it('should throw on #shutdown', async function() {
 
       // given
-      workers = createWorkers({
+      worker = createWorker({
         autoPoll: false
       });
 
@@ -1045,7 +1060,7 @@ describe('workers', function() {
 
       // when
       try {
-        await workers.shutdown();
+        await worker.shutdown();
       } catch (e) {
         err = e;
       }

@@ -12,20 +12,20 @@ Implement your [external task workers](https://docs.camunda.org/manual/latest/us
 This library exposes a simple API to implement external task workers for [Camunda](http://camunda.org).
 
 ```javascript
-var Workers = require('camunda-worker-node');
+var Worker = require('camunda-worker-node');
 var Backoff = require('camunda-worker-node/lib/backoff');
 
 var engineEndpoint = 'http://localhost:8080/engine-rest';
 
-var workers = Workers(engineEndpoint, {
+var worker = Worker(engineEndpoint, {
   workerId: 'some-worker-id',
   use: [
     Backoff
   ]
 });
 
-// a worker may access and modify process variables
-workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
+// a work subscription may access and modify process variables
+worker.subscribe('work:A', [ 'numberVar' ], async function(context) {
 
   var newNumber = context.variables.numberVar + 1;
 
@@ -35,15 +35,15 @@ workers.registerWorker('work:A', [ 'numberVar' ], async function(context) {
   }
 
   // complete with update variables
-  return {
+  return Complete({
     variables: {
       numberVar: newNumber
     }
-  };
+  });
 });
 
-// stop the workers instance with the application
-workers.stop();
+// stop the worker instance with the application
+worker.stop();
 ```
 
 Make sure you properly configured the [external tasks](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/) in your BPMN 2.0 diagram:
@@ -58,14 +58,14 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 
 ## Features
 
-* Implement workers [node-style](#workers-node-style) or via [`async` functions](#workers-as-async-functions)
+* Subscribe to work [node-style](#work-node-style) or via [`async` functions](#work-with-async-function)
 * Complete tasks with updated variables or fail with errors
 * Trigger [BPMN errors](#trigger-bpmn-errors)
 * [Configure and extend task locks](#task-locks)
 * Configure [logging](#logging) and [authentication](#authentication)
 * [Configure task fetching](#task-fetching)
-* [Control the workers life-cycle](#workers-life-cycle)
-* [Extend via plugins](#extend-workers)
+* [Control the worker life-cycle](#worker-life-cycle)
+* [Extend via plug-ins](#extend-via-plug-ins)
 
 
 ## Resources
@@ -75,18 +75,18 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 * [Changelog](./CHANGELOG.md)
 
 
-## Implementing Workers
+## Implementing Worker
 
 Implement your workers via `async`, promise returning functions or pass results via node-style callbacks.
 
 
-### Workers, Node Style
+### Work, Node Style
 
 Use the provided callback to pass task execution errors and data, node-style:
 
 ```javascript
-// a worker can receive a node-style callback
-workers.registerWorker('work:B', function(context, callback) {
+// report work results via a node-style callback
+workes.subscribe('work:B', function(context, callback) {
 
   var newNumber = context.variables.numberVar + 1;
 
@@ -104,13 +104,13 @@ workers.registerWorker('work:B', function(context, callback) {
 });
 ```
 
-### Workers as async Functions
+### Work with async Function
 
-ES6 style async/await to implement workers is fully supported:
+ES6 style async/await to implement work is fully supported:
 
 ```javascript
-// a worker can be an async function
-workers.registerWorker('work:B', async function(context) {
+// implement work via a Promise returning async function
+worker.subscribe('work:B', async function(context) {
 
   // await async increment
   var newNumber = await increment(context.variables.numberVar);
@@ -133,7 +133,7 @@ workers.registerWorker('work:B', async function(context) {
 You may indicate BPMN errors to trigger business defined exception handling:
 
 ```javascript
-workers.registerWorker('work:B', async function(context) {
+worker.subscribe('work:B', async function(context) {
 
   // trigger business aka BPMN errors
   return {
@@ -152,7 +152,7 @@ to increase the lock time while the worker is busy.
 
 ```javascript
 // configure three seconds as initial lock time
-workers.registerWorker('work:B', {
+worker.subscribe('work:B', {
   lockDuration: 3000,
   variables: [ 'a' ]
 }, async function(context) {
@@ -179,7 +179,7 @@ We provide middlewares for basic auth as well as token based authentication.
 Provide your client credentials via the [`BasicAuth`](./lib/basic-auth.js) middleware:
 
 ```javascript
-var workers = Workers(engineEndpoint, {
+var worker = Worker(engineEndpoint, {
   use: [
     BasicAuth('walt', 'SECRET_PASSWORD')
   ]
@@ -192,7 +192,7 @@ var workers = Workers(engineEndpoint, {
 Provide your tokens via the [`Auth`](./lib/auth.js) middleware:
 
 ```javascript
-var workers = Workers(engineEndpoint, {
+var worker = Worker(engineEndpoint, {
   use: [
     Auth('Bearer', 'BEARER_TOKEN')
   ]
@@ -202,10 +202,10 @@ var workers = Workers(engineEndpoint, {
 
 ### Custom Made
 
-To support custom authentication options add additional request headers to authenticate your task workers via the `requestOptions` configuration:
+To support custom authentication options add additional request headers to authenticate your task worker via the `requestOptions` configuration:
 
 ```javascript
-var workers = Workers(engineEndpoint, {
+var worker = Worker(engineEndpoint, {
   requestOptions: {
     headers: {
       Hello: 'Authenticated?'
@@ -233,57 +233,57 @@ Task fetching is controlled by two configuration properties:
 * `maxTasks` - maximum number of tasks to be fetched and locked with a single poll
 * `pollingInterval` - interval in milliseconds between polls
 
-You may configure both properties on workers creation and at run-time:
+You may configure both properties on worker creation and at run-time:
 
 ```javascript
-var workers = Workers(engineEndpoint, {
+var worker = Worker(engineEndpoint, {
   maxTasks: 2,
   pollingInterval: 1500
 });
 
 // dynamically increase max tasks
-workers.configure({
+worker.configure({
   maxTasks: 5
 });
 ```
 
 This way you can configure the task fetching behavior both statically and dynamically.
 
-Roll your own middleware to dynamically configure the workers instance or let
-the [`Backoff` middleware](./lib/backoff.js) do the work for you.
+Roll your own middleware to dynamically configure the worker instance or let
+the [`Backoff` middleware](./lib/backoff.js) take care of it.
 
 As an alternative to configuring these values you may [stop and re-start](#control-life-cycle)
-the Workers instance as needed, too.
+the Worker instance as needed, too.
 
 
-## Workers Life-Cycle
+## Worker Life-Cycle
 
-Per default the workers instance will start to poll for work immediately.
+Per default the worker instance will start to poll for work immediately.
 Configure this behavior via the `autoPoll` option and start, stop and re-start
 the instance programatically if you need to:
 
 ```javascript
-var workers = Workers(engineEndpoint, {
+var worker = Worker(engineEndpoint, {
   autoPoll: false
 });
 
 // manually start polling
-workers.start();
+worker.start();
 
 // stop later on
-await workers.stop();
+await worker.stop();
 
 // re-start at some point in time
-workers.start();
+worker.start();
 ```
 
 
-## Extend Workers
+## Extend via Plug-ins
 
-Workers may be extended via the `use` config parameter.
+A worker may be extended via the `use` config parameter.
 
 ```javascript
-Workers(engineEndpoint, {
+Worker(engineEndpoint, {
   use: [
     Logger,
     Backoff,
@@ -302,18 +302,18 @@ Workers(engineEndpoint, {
 * [`Auth`](./lib/auth.js) - authorize against REST api with arbitrary tokens
 
 
-## Dynamically Unregister a Worker
+## Dynamically Unregister a Work Subscription
 
-It is possible to dynamically unregister a worker any time.
+It is possible to dynamically unregister a work subscription any time.
 
 ```javascript
-var worker = workers.registerWorker('someTopic', async function(context) {
+var subscription = worker.subscribe('someTopic', async function(context) {
   // do work
   console.log('doing work!');
 });
 
 // later
-worker.remove();
+subscription.remove();
 ```
 
 

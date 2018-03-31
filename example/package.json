@@ -11,7 +11,7 @@
     "support:start-process": "node support/start-process.js",
     "support:start-camunda": "camunda start",
     "support:stop-camunda": "camunda stop",
-    "start-workers": "DEBUG=orderProcess:*,workers,workers:* node index.js"
+    "start-workers": "DEBUG=orderProcess:*,worker,worker:* node index.js"
   },
   "dependencies": {
     "camunda-worker-node": "file:..",
