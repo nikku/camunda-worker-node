@@ -7,6 +7,8 @@ var Worker = require('../');
 var Logger = require('../lib/logger');
 var Backoff = require('../lib/backoff');
 
+var SerializedVariable = require('../lib/serialized-variable');
+
 var EngineApi = require('./engine/api');
 
 var debug = require('debug')('worker-spec');
@@ -871,14 +873,14 @@ describe('worker', function() {
 
   describe('variable serialization', function() {
 
-    it('should preserve Object serialization', async function() {
+    it('should preserve existing', async function() {
 
       // given
-      var existingUser = {
+      var serializedUser = {
         type: 'Object',
-        value: {
+        value: JSON.stringify({
           name: 'Hugo'
-        },
+        }),
         valueInfo: {
           serializationDataFormat: 'application/json',
           objectTypeName: 'my.example.Customer'
@@ -889,18 +891,127 @@ describe('worker', function() {
         id
       } = await engineApi.startProcessByKey(
         'TestProcess',
-        { existingUser: existingUser }
+        {
+          user: SerializedVariable(serializedUser)
+        }
       );
 
-      var newUser = {
+      worker = createWorker({
+        autoPoll: true
+      });
+
+      // when
+      worker.subscribe('work:A', [ 'user' ], async function(context) {
+
+        var user = context.variables.user;
+
+        // expect deserialized user
+        expect(user).to.eql({
+          name: 'Hugo'
+        });
+
+        // update
+        user.age = 31;
+
+        return {
+          variables: {
+            // updated existing user
+            user
+          }
+        };
+      });
+
+      await delay(2);
+
+      // then
+      var userVar = await engineApi.getProcessVariable(id, 'user');
+
+      var rawUser = extend({}, serializedUser, {
+        value: JSON.stringify({
+          name: 'Hugo',
+          age: 31
+        })
+      });
+
+      // expect modified uuser
+      expect(userVar).to.eql(rawUser);
+    });
+
+
+    it('should allow custom serialization', async function() {
+
+      // given
+      const serializedUser = {
         type: 'Object',
-        value: {
+        value: JSON.stringify({
           name: 'Bert',
           age: 50
-        },
+        }),
         valueInfo: {
           serializationDataFormat: 'application/json',
           objectTypeName: 'my.example.Customer'
+        }
+      };
+
+      const {
+        id
+      } = await engineApi.startProcessByKey('TestProcess');
+
+      worker = createWorker({
+        autoPoll: true
+      });
+
+      // when
+      worker.subscribe('work:A', async function(context) {
+
+        return {
+          variables: {
+            // serialized new user
+            user: SerializedVariable(serializedUser)
+          }
+        };
+      });
+
+      await delay(2);
+
+      const userVar = await engineApi.getProcessVariable(id, 'user');
+
+      // then
+      // expect saved new user
+      expect(userVar).to.eql(serializedUser);
+    });
+
+
+    it('should override existing with custom serialization', async function() {
+
+      // given
+      var existingUser = {
+        type: 'Object',
+        value: JSON.stringify({
+          name: 'Hugo'
+        }),
+        valueInfo: {
+          serializationDataFormat: 'application/json',
+          objectTypeName: 'my.example.Customer'
+        }
+      };
+
+      const {
+        id
+      } = await engineApi.startProcessByKey(
+        'TestProcess',
+        {
+          user: SerializedVariable(existingUser)
+        }
+      );
+
+      // given
+      var serializedUser = {
+        type: 'Object',
+        value: JSON.stringify('hello world'),
+        valueInfo: {
+          serializationDataFormat: 'application/json',
+          objectTypeName: 'java.lang.String'
         }
       };
 
@@ -909,51 +1020,23 @@ describe('worker', function() {
       });
 
       // when
-      worker.subscribe('work:A', [ 'existingUser' ], async function(context) {
-
-        var existingUser = context.variables.existingUser;
-
-        // expect deserialized user
-        expect(existingUser).to.eql({
-          name: 'Hugo'
-        });
-
-        // update
-        existingUser.age = 31;
+      worker.subscribe('work:A', async function(context) {
 
         return {
           variables: {
-            // updated existing user
-            existingUser,
-            // serialized new user
-            newUser: newUser
+            // override existing, already serialized user
+            user: SerializedVariable(serializedUser)
           }
         };
       });
 
       await delay(2);
 
-      const newUserVar = await engineApi.getProcessVariable(id, 'newUser');
-
-      var rawNewUser = extend({}, newUser, {
-        value: JSON.stringify(newUser.value)
-      });
-
       // then
-      // expect saved new user
-      expect(newUserVar).to.eql(rawNewUser);
+      // expect updated user with custom serialization
+      const userVar = await engineApi.getProcessVariable(id, 'user');
 
-      var existingUserVar = await engineApi.getProcessVariable(id, 'existingUser');
-
-      var rawExistingUser = extend({}, newUser, {
-        value: JSON.stringify({
-          name: 'Hugo',
-          age: 31
-        })
-      });
-
-      // expect modified existing user
-      expect(existingUserVar).to.eql(rawExistingUser);
+      expect(userVar).to.eql(serializedUser);
     });
 
   });
