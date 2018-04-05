@@ -6,7 +6,7 @@ var Worker = require('../');
 
 var Logger = require('../lib/logger');
 var Backoff = require('../lib/backoff');
-var ManualSerialization = require('../lib/manual-serialization')
+var ManualSerialization = require('../lib/manual-serialization');
 
 var EngineApi = require('./engine/api');
 
@@ -980,7 +980,7 @@ describe('worker', function() {
 
       // when
       worker.subscribe('work:A', [], async function(context) {
-        
+
         return {
           variables: {
             // newly serialized user
