@@ -6,6 +6,7 @@ var Worker = require('../');
 
 var Logger = require('../lib/logger');
 var Backoff = require('../lib/backoff');
+var ManualSerialization = require('../lib/manual-serialization');
 
 var EngineApi = require('./engine/api');
 
@@ -954,6 +955,54 @@ describe('worker', function() {
 
       // expect modified existing user
       expect(existingUserVar).to.eql(rawExistingUser);
+    });
+
+    it('should allow custom serialization options', async function() {
+      const {
+        id
+      } = await engineApi.startProcessByKey(
+        'TestProcess'
+      );
+
+      // given
+      var newUser = {
+        type: 'Object',
+        value: '"hello world"',
+        valueInfo: {
+          serializationDataFormat: 'application/json',
+          objectTypeName: 'java.lang.String'
+        }
+      };
+
+      worker = createWorker({
+        autoPoll: true
+      });
+
+      // when
+      worker.subscribe('work:A', [], async function(context) {
+
+        return {
+          variables: {
+            // newly serialized user
+            newUser: new ManualSerialization(newUser)
+          }
+        };
+      });
+
+      await delay(2);
+
+      const newUserVar = await engineApi.getProcessVariable(id, 'newUser');
+
+      // then
+      // expect saved new user
+      expect(newUserVar).to.eql({
+        type: 'Object',
+        value: '"hello world"',
+        valueInfo: {
+          serializationDataFormat: 'application/json',
+          objectTypeName: 'java.lang.String'
+        }
+      });
     });
 
   });
