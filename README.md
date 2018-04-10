@@ -35,11 +35,11 @@ worker.subscribe('work:A', [ 'numberVar' ], async function(context) {
   }
 
   // complete with update variables
-  return Complete({
+  return {
     variables: {
       numberVar: newNumber
     }
-  });
+  };
 });
 
 // stop the worker instance with the application
