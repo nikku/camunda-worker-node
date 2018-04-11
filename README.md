@@ -66,6 +66,7 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 * [Configure task fetching](#task-fetching)
 * [Control the worker life-cycle](#worker-life-cycle)
 * [Extend via plug-ins](#extend-via-plug-ins)
+* [Customizable Variable Serialization](#variable-serialization)
 
 
 ## Resources
@@ -300,6 +301,37 @@ Worker(engineEndpoint, {
 * [`Metrics`](./lib/metrics.js) - collect and periodically log utilization metrics
 * [`BasicAuth`](./lib/basic-auth.js) - authorize against REST api with username + password
 * [`Auth`](./lib/auth.js) - authorize against REST api with arbitrary tokens
+
+
+## Variable Serialization
+
+Variables, when being read, modified and passed back on taks completion will preserve
+their serialized form (indicated via `valueInfo` as documented in the [Camunda REST API documentation](https://docs.camunda.org/manual/latest/reference/rest/external-task/post-complete/)). Newly added variables will be serialized without `valueInfo` using the types `String`, `Date`, `Boolean`, `Json` or `Double` as appropriate.
+
+You may wrap variables with `SerializedVariable` if you would like to take full control over variable serialization:
+
+```javascript
+var Serialized = require('camunda-worker-node/lib/serialized-variable');
+
+worker.subscribe('shop:create-customer', async function(context) {
+
+  return {
+    variables: {
+      // wrap user to indicate it is already serialized
+      customer: Serialized({
+        type: 'Object',
+        value: JSON.stringify({
+          name: 'Hugo'
+        }),
+        valueInfo: {
+          serializationDataFormat: 'application/json',
+          objectTypeName: 'my.example.Customer'
+        }
+      })
+    }
+  };
+});
+```
 
 
 ## Dynamically Unregister a Work Subscription
