@@ -66,7 +66,7 @@ Make sure you properly configured the [external tasks](https://docs.camunda.org/
 * [Configure task fetching](#task-fetching)
 * [Control the worker life-cycle](#worker-life-cycle)
 * [Extend via plug-ins](#extend-via-plug-ins)
-* [Customizable Variable Serialization](#variable-serialization)
+* [Customize Variable Serialization](#variable-serialization)
 
 
 ## Resources
