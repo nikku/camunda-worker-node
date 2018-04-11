@@ -253,7 +253,7 @@ This way you can configure the task fetching behavior both statically and dynami
 Roll your own middleware to dynamically configure the worker instance or let
 the [`Backoff` middleware](./lib/backoff.js) take care of it.
 
-As an alternative to configuring these values you may [stop and re-start](#control-life-cycle)
+As an alternative to configuring these values you may [stop and re-start](#worker-life-cycle)
 the Worker instance as needed, too.
 
 
