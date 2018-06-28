@@ -12,8 +12,10 @@ Implement your [external task workers](https://docs.camunda.org/manual/latest/us
 This library exposes a simple API to implement external task workers for [Camunda](http://camunda.org).
 
 ```javascript
-var Worker = require('camunda-worker-node');
-var Backoff = require('camunda-worker-node/lib/backoff');
+var {
+  Worker,
+  Backoff
+} = require('camunda-worker-node');
 
 var engineEndpoint = 'http://localhost:8080/engine-rest';
 
@@ -311,14 +313,16 @@ their serialized form (indicated via `valueInfo` as documented in the [Camunda R
 You may wrap variables with `SerializedVariable` if you would like to take full control over variable serialization:
 
 ```javascript
-var Serialized = require('camunda-worker-node/lib/serialized-variable');
+var {
+  SerializedVariable
+} = require('camunda-worker-node');
 
 worker.subscribe('shop:create-customer', async function(context) {
 
   return {
     variables: {
       // wrap user to indicate it is already serialized
-      customer: Serialized({
+      customer: SerializedVariable({
         type: 'Object',
         value: JSON.stringify({
           name: 'Hugo'
