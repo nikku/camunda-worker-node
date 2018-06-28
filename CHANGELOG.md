@@ -6,6 +6,10 @@ All notable changes to [camunda-worker-node](https://github.com/nikku/camunda-wo
 
 ___Note:__ Yet to be released changes appear here._
 
+## 8.0.0
+
+* `FEAT`: transpile to ES5 to make usable in `node>=4` and browser environments ([#17](https://github.com/nikku/camunda-worker-node/issues/17))
+
 ## 7.1.0
 
 * `FEAT`: add ability to take full control over variable serialization ([#14](https://github.com/nikku/camunda-worker-node/issues/14))
