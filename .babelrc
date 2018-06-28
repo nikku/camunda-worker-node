@@ -1,0 +1,9 @@
+ {
+  "plugins": [
+    "transform-object-rest-spread",
+    "transform-async-to-promises"
+  ],
+  "presets": [
+    [ "env", { "modules": false } ]
+  ]
+}
