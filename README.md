@@ -1,6 +1,6 @@
 # camunda-worker-node
 
-[![Build Status](https://travis-ci.com/nikku/camunda-worker-node.svg?branch=master)](https://travis-ci.com/nikku/camunda-worker-node)
+[![CI](https://github.com/nikku/camunda-worker-node/actions/workflows/CI.yml/badge.svg)](https://github.com/nikku/camunda-worker-node/actions/workflows/CI.yml)
 
 Implement your [external task workers](https://docs.camunda.org/manual/latest/user-guide/process-engine/external-tasks/) for [Camunda](http://camunda.org) in [NodeJS](https://nodejs.org/).
 
